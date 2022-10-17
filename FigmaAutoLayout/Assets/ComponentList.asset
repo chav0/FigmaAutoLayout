@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad7ab519b1764eaea4c6f996cb5599fd, type: 3}
+  m_Name: ComponentList
+  m_EditorClassIdentifier: 
+  components:
+  - id: 3200:57030
+    prefab: {fileID: 7901980443575046224, guid: 1a0adc3f9cc514430abe0149ffdeaffa, type: 3}
+    color: 
+  - id: I3200:57031;302:4212
+    prefab: {fileID: 1223045099826236210, guid: 304418a328b074b99b0bcad517268f00, type: 3}
+    color: 
+  - id: 3200:57031
+    prefab: {fileID: 5032877694975055101, guid: 9e840b80d016144bea56e7da64996888, type: 3}
+    color: 
