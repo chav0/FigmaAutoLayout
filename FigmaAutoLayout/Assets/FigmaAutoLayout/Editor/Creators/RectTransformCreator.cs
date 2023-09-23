@@ -1,12 +1,13 @@
-﻿using Blobler.Objects;
+﻿using System;
+using Blobler.Objects;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Blobler.Creators
 {
-    internal class RectTransformCreator : ICreator
+	[Serializable]
+    internal class RectTransformCreator : CreatorBase
     {
-        public void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
+        public override void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
         {
             var rect = gameObject.GetComponent<RectTransform>();
             if (rect == null)

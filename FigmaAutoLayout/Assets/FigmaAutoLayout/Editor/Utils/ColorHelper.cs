@@ -3,9 +3,9 @@ using System.Linq;
 using Blobler.Objects;
 using UnityEngine;
 
-namespace Blobler.Creators
+namespace Blobler.Utils
 {
-    internal static class ColorCalculator 
+    internal static class ColorHelper 
     {
         internal static bool NeedAddImage(IReadOnlyList<FigmaFill> fills)
         {

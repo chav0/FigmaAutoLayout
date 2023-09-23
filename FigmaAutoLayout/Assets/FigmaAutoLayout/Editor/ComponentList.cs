@@ -5,7 +5,8 @@ using UnityEngine;
 
 namespace Blobler
 {
-    [CreateAssetMenu(menuName = "Blobler/ComponentList")]
+
+	[CreateAssetMenu(menuName = "Blobler/ComponentList")]
     public class ComponentList : ScriptableObject
     {
         [SerializeField] private List<Component> components;

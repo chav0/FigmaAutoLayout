@@ -1,7 +1,8 @@
-using System.Collections.Generic;
 using Blobler;
 using Blobler.Creators;
 using Blobler.Objects;
+using Blobler.Utils;
+using Figma.Utils;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,31 +15,14 @@ namespace Figma.Creators
         private readonly int _layerId;
         private readonly string _prefabsPath;
         private readonly ComponentList _componentList;
-        private readonly List<ICreator> _creators = new List<ICreator>();
+        private readonly CreatorsList _creators;
 
-        public PrefabCreator(bool addImages, bool addTMP, bool addLayoutGroups, bool addContentSizeFitters, int layerId, string prefabsPath,
-            ComponentList componentList)
+        public PrefabCreator(CreatorsList creators, int layerId, string prefabsPath, ComponentList componentList)
         {
+	        _creators = creators;
             _layerId = layerId;
             _prefabsPath = prefabsPath;
             _componentList = componentList;
-
-            if (addTMP)
-                _creators.Add(new TextCreator());
-            
-            _creators.Add(new RectTransformCreator());
-            
-            if (addImages)
-                _creators.Add(new ImageCreator());
-
-            if (addLayoutGroups)
-            {
-                _creators.Add(new HorizontalGroupCreator());
-                _creators.Add(new VerticalGroupCreator());
-            }
-
-            if (addContentSizeFitters)
-                _creators.Add(new ContentSizeFitterCreator()); 
         }
         
         public void CreatePrefabFromFigmaFile(FigmaFile file, int selectedPage, int selectedFrame)
@@ -56,7 +40,7 @@ namespace Figma.Creators
                 case FigmaObjectType.FRAME:
                 case FigmaObjectType.COMPONENT:
                 case FigmaObjectType.INSTANCE:
-                    var prefabName = Formatter.FormatPrefabName(frame.name); 
+                    var prefabName = FormatHelper.FormatPrefabName(frame.name); 
                     CreatePrefab(frame, prefabName);
                     break;
                 default:
@@ -81,10 +65,10 @@ namespace Figma.Creators
             if (frame.absoluteBoundingBox.width != null && frame.absoluteBoundingBox.height != null) 
                 frameRect.sizeDelta = new Vector2(frame.absoluteBoundingBox.width.Value, frame.absoluteBoundingBox.height.Value);
 
-            if (ColorCalculator.NeedAddImage(frame.fills))
+            if (ColorHelper.NeedAddImage(frame.fills))
             {
                 var frameImage = baseLayer.AddComponent<Image>();
-                frameImage.color = ColorCalculator.CalculateColor(frame.fills);
+                frameImage.color = ColorHelper.CalculateColor(frame.fills);
             }
 
             if (frame.children != null)
@@ -101,7 +85,7 @@ namespace Figma.Creators
             if (componentSet.children == null || componentSet.children.Length == 0) 
                 return;
 
-            var originPrefabName = Formatter.FormatPrefabName(componentSet.name); 
+            var originPrefabName = FormatHelper.FormatPrefabName(componentSet.name); 
             var originPrefab = CreatePrefab(componentSet.children[0], originPrefabName);
 
             foreach (var child in componentSet.children)
@@ -113,8 +97,8 @@ namespace Figma.Creators
         private void CreateVariant(GameObject originPrefab, FigmaObject variantFigmaObject)
         {
             var objSource = (GameObject)PrefabUtility.InstantiatePrefab(originPrefab);
-            var variantPrefabName = Formatter.FormatVariantPrefabName(variantFigmaObject.name);
-            var variantColor = Formatter.FormatVariantColor(variantFigmaObject.name);
+            var variantPrefabName = FormatHelper.FormatVariantPrefabName(variantFigmaObject.name);
+            var variantColor = FormatHelper.FormatVariantColor(variantFigmaObject.name);
             var component = _componentList.FindByName(variantPrefabName);
             var variant = component == null ? CreatePrefab(objSource, variantPrefabName) : component.prefab; 
             
@@ -166,7 +150,7 @@ namespace Figma.Creators
                 var pos = rect.anchoredPosition; 
                 var size = rect.sizeDelta;
 
-                var prefabName = Formatter.FormatPrefabName(figmaObject.name); 
+                var prefabName = FormatHelper.FormatPrefabName(figmaObject.name); 
                 var prefab = CreatePrefab(objChild, prefabName);
                 if (prefab == null) 
                     return;
@@ -195,8 +179,8 @@ namespace Figma.Creators
             }
 
             // try find prefab by name in project
-            var path = Formatter.FormatPath(_prefabsPath);
-            var prefabName = Formatter.FormatPrefabName(figmaObject.name); 
+            var path = FormatHelper.FormatPath(_prefabsPath);
+            var prefabName = FormatHelper.FormatPrefabName(figmaObject.name); 
             var guids = AssetDatabase.FindAssets($"t:Prefab {prefabName}", new[] {path});
             foreach (var guid in guids)
             {

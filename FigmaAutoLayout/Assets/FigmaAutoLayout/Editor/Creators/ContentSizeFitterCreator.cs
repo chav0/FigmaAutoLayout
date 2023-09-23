@@ -1,12 +1,15 @@
+using System;
+using Blobler.Creators;
 using Blobler.Objects;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Blobler.Creators
+namespace Blobler.Utils
 {
-    internal class ContentSizeFitterCreator : ICreator
+	[Serializable]
+    internal class ContentSizeFitterCreator : CreatorBase
     {
-        public void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
+        public override void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
         {
             if (figmaObject.layoutMode == FigmaLayoutMode.NONE)
                 return;

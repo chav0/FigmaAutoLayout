@@ -1,8 +1,8 @@
 using System.Globalization;
 
-namespace Figma.Creators
+namespace Figma.Utils
 {
-    public static class Formatter
+    public static class FormatHelper
     {
         public static string FormatPrefabName(string prefabName) => prefabName.Replace(" ", "");
 
@@ -32,12 +32,7 @@ namespace Figma.Creators
             return variantName; 
         }
 
-        public static string FormatPath(string path)
-        {
-            if (path[path.Length - 1] == '/')
-                return path.Substring(0, path.Length - 1);
-
-            return path; 
-        }
+        public static string FormatPath(string path) => 
+	        path[^1] == '/' ? path[..^1] : path;
     }
 }

@@ -1,4 +1,6 @@
-﻿using Blobler.Objects;
+﻿using System;
+using Blobler.Objects;
+using Blobler.Utils;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,9 +8,10 @@ using static Blobler.Objects.FigmaObjectType;
 
 namespace Blobler.Creators
 {
-    internal class ImageCreator : ICreator
+	[Serializable]
+    internal class ImageCreator : CreatorBase
     {
-        public void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject root)
+        public override void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject root)
         {
             if ((figmaObject.type & GRAPHIC) == NONE)
                 return;
@@ -34,10 +37,10 @@ namespace Blobler.Creators
                 }
             }
             
-            if (ColorCalculator.NeedAddImage(figmaObject.fills))
+            if (ColorHelper.NeedAddImage(figmaObject.fills))
             {
                 var image = gameObject.AddComponent<Image>();
-                var color = ColorCalculator.CalculateColor(figmaObject.fills);
+                var color = ColorHelper.CalculateColor(figmaObject.fills);
                 color = new Color(color.r, color.g, color.b, color.a * figmaObject.opacity.GetValueOrDefault(1f)); 
                 image.color = color;
 

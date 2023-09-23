@@ -1,21 +1,23 @@
 ﻿using System;
 using Blobler.Objects;
+using Blobler.Utils;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 
 namespace Blobler.Creators
 {
-    internal class TextCreator : ICreator
+	[Serializable]
+    internal class TextCreator : CreatorBase
     {
-        public void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
+        public override void Create(GameObject gameObject, FigmaObject figmaObject, Transform parent, FigmaObject frame)
         {
             if (figmaObject.type != FigmaObjectType.TEXT)
                 return;
             
             var text = gameObject.AddComponent<TextMeshProUGUI>();
             text.fontSize = figmaObject.style.fontSize;
-            text.color = ColorCalculator.CalculateColor(figmaObject.fills);
+            text.color = ColorHelper.CalculateColor(figmaObject.fills);
             text.font = FindFont(figmaObject.style.fontFamily, figmaObject.style.fontPostScriptName);
             text.text = figmaObject.characters;
             text.alignment = GetAlignment(figmaObject.style.textAlignHorizontal, figmaObject.style.textAlignVertical);
