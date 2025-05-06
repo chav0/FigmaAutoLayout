@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Figma.Creators;
 using Figma.Objects;
@@ -18,9 +19,11 @@ namespace Figma
         private int _uiLayer;
         private string _fileURL;
         private string _token;
+        private string _search = string.Empty;
         private string[] _pages;
         private int _selectedPage;
         private string[] _frames;
+        private int _serachSelectedFrame;
         private int _selectedFrame;
         private LayoutPipeline _layoutPipeline;
         private ComponentList _componentList;
@@ -128,7 +131,7 @@ namespace Figma
 
                 var height = Math.Max(_pages?.Length ?? 1, _frames?.Length ?? 1) * 24 + 24;
 
-                _pagesScrollPos = EditorGUILayout.BeginScrollView(_pagesScrollPos, GUILayout.Height(height));
+                _pagesScrollPos = EditorGUILayout.BeginScrollView(_pagesScrollPos, GUILayout.Height(height), GUILayout.MaxHeight(300));
                 GUILayout.BeginVertical("box");
                 GUILayout.Label("Select Page");
                 var selectedPage = GUILayout.SelectionGrid(_selectedPage, _pages, 1);
@@ -137,15 +140,27 @@ namespace Figma
                     _selectedPage = selectedPage;
                     _selectedFrame = 0;
                 }
-
-                _frames = _parsedFile.document.children[_selectedPage].children.Select(x => x.name).ToArray();
+                _frames = _parsedFile.document.children[_selectedPage].children.Select(x => x.name.Substring(0, Math.Min(20, x.name.Length))).ToArray();
                 GUILayout.EndVertical();
                 EditorGUILayout.EndScrollView();
 
-                _framesScrollPos = EditorGUILayout.BeginScrollView(_framesScrollPos, GUILayout.Height(height));
+                _framesScrollPos = EditorGUILayout.BeginScrollView(_framesScrollPos, GUILayout.Height(height), GUILayout.MaxHeight(300));
                 GUILayout.BeginVertical("box");
                 GUILayout.Label("Select Frame");
-                _selectedFrame = GUILayout.SelectionGrid(_selectedFrame, _frames, 1);
+                _search = EditorGUILayout.TextField("Search", _search);
+                var searchResult = new List<(string, int)>();
+                for (var i = 0; i < _frames.Length; i++)
+                {
+                    var frame = _frames[i];
+                    if (frame.ToLower().Contains(_search.ToLower()))
+                    {
+                        searchResult.Add((frame, i));
+                    }
+                }
+
+                _frames.Where(x => x.ToLower().Contains(_search.ToLower()));
+                _serachSelectedFrame = GUILayout.SelectionGrid(_serachSelectedFrame, searchResult.Select(x => x.Item1).ToArray(), 1);
+                _selectedFrame = _serachSelectedFrame < searchResult.Count ? searchResult[_serachSelectedFrame].Item2 : 0;
                 GUILayout.EndVertical();
                 EditorGUILayout.EndScrollView();
 
@@ -153,8 +168,7 @@ namespace Figma
 
                 if (_pages != null && _pages.Length > 0 && _frames.Length > 0)
                 {
-                    GUILayout.Space(10);
-                    if (GUILayout.Button("Create Prefab", GUILayout.Height(30)))
+                    if (GUILayout.Button("Create"))
                         CreatePrefab();
                 }
             }
