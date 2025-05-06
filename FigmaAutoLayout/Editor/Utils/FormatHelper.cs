@@ -4,11 +4,16 @@ namespace Figma.Utils
 {
     public static class FormatHelper
     {
-        public static string FormatPrefabName(string prefabName) => prefabName.Replace(" ", "");
+        public static string FormatPrefabName(string prefabName) => prefabName
+            .Replace(" ", "")
+            .Replace("/", "");
 
         public static string FormatVariantPrefabName(string variantName)
         {
-            variantName = variantName.Replace(" ", "");
+            variantName = variantName
+                .Replace(" ", "")
+                .Replace("/", "");
+            
             var properties = variantName.Split(',');
             foreach (var property in properties)
             {
@@ -21,7 +26,7 @@ namespace Figma.Utils
 
         public static string FormatVariantColor(string variantName)
         {
-            variantName = variantName.Replace(" ", "");
+            variantName = variantName.Replace(" ", "").Replace("/", "");
             var properties = variantName.Split(',');
             foreach (var property in properties)
             {
@@ -33,6 +38,6 @@ namespace Figma.Utils
         }
 
         public static string FormatPath(string path) => 
-	        path[^1] == '/' ? path[..^1] : path;
+            path[^1] == '/' ? path[..^1] : path;
     }
 }
