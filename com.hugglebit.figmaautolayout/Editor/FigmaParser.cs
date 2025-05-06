@@ -39,45 +39,88 @@ namespace Figma
 
         void OnGUI()
         {
-            EditorGUILayout.LabelField("Figma auto layout");
-            EditorGUILayout.Space();
+            GUILayout.Space(10);
+            EditorGUILayout.LabelField("FIGMA AUTO LAYOUT", new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 20,
+                alignment = TextAnchor.MiddleCenter
+            });
+            GUILayout.Space(10);
 
-            EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.MinHeight(10f));
-
-            EditorGUILayout.Space();
-            GUILayout.Label("Settings");
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Settings", EditorStyles.boldLabel);
             _uiPrefabPath = EditorGUILayout.TextField("Path to UI Prefabs", _uiPrefabPath);
             _uiLayer = EditorGUILayout.IntField("UI Layer Id", _uiLayer);
+            EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space();
-            GUILayout.Label("File");
+            GUILayout.Space(8);
+            
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Figma File", EditorStyles.boldLabel);
             _token = EditorGUILayout.TextField("Figma Token", _token);
             _fileURL = EditorGUILayout.TextField("File URL", _fileURL);
+            EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space();
-            GUILayout.Label("Layout pipeline");
-            _layoutPipeline = (LayoutPipeline) EditorGUILayout.ObjectField("Layout Pipeline", _layoutPipeline, typeof(LayoutPipeline), true);
+            GUILayout.Space(8);
+
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Layout Pipeline", EditorStyles.boldLabel);
+            
+            if (_layoutPipeline == null) 
+                EditorGUILayout.HelpBox("Please, insert layout pipeline!", MessageType.Error);
+            
+            _layoutPipeline = (LayoutPipeline)EditorGUILayout.ObjectField("Layout Pipeline", _layoutPipeline,
+                typeof(LayoutPipeline), false);
 
             if (_layoutPipeline == null)
-	            EditorGUILayout.HelpBox("Please, insert layout pipeline!", MessageType.Error);
+            {
+                if (GUILayout.Button("+ Create Layout Pipeline"))
+                {
+                    _layoutPipeline = CreateAsset<LayoutPipeline>("LayoutPipeline");
+                }
+            }
+            
+            EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space();
-            _componentList = (ComponentList) EditorGUILayout.ObjectField("Component list", _componentList, typeof(ComponentList), true);
+            GUILayout.Space(8);
 
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Component List", EditorStyles.boldLabel);
+            
             if (_componentList == null)
                 EditorGUILayout.HelpBox("Please, insert component list to save and find the necessary components", MessageType.Warning);
+            
+            _componentList = (ComponentList)EditorGUILayout.ObjectField("Component List", _componentList, typeof(ComponentList), false);
+            
+            if (_componentList == null)
+            {
+                if (GUILayout.Button("+ Create Component List"))
+                {
+                    _componentList = CreateAsset<ComponentList>("ComponentList");
+                }
+            }
+            
+            EditorGUILayout.EndVertical();
 
-            if (GUILayout.Button("Download images"))
+            GUILayout.Space(12);
+
+            GUI.backgroundColor = Color.cyan;
+            if (GUILayout.Button("Download Images", GUILayout.Height(30)))
             {
                 Requester.ImageRequest(_token, _fileURL);
             }
 
-            if (_layoutPipeline != null)
-	            if (GUILayout.Button("Parse"))
-	            {
-		            _parsedFile = Requester.FileRequest(_token, _fileURL);
-		            _pages = _parsedFile.document.children.Select(x => x.name).ToArray();
-	            }
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.Space(5);
+
+            if (_layoutPipeline != null && GUILayout.Button("Parse Figma File", GUILayout.Height(30)))
+            {
+                _parsedFile = Requester.FileRequest(_token, _fileURL);
+                _pages = _parsedFile.document.children.Select(x => x.name).ToArray();
+            }
+
+            GUILayout.Space(10);
 
             if (_parsedFile != null)
             {
@@ -85,7 +128,7 @@ namespace Figma
 
                 var height = Math.Max(_pages?.Length ?? 1, _frames?.Length ?? 1) * 24 + 24;
 
-                _pagesScrollPos = EditorGUILayout.BeginScrollView(_pagesScrollPos, GUILayout.Height(height), GUILayout.MaxHeight(300));
+                _pagesScrollPos = EditorGUILayout.BeginScrollView(_pagesScrollPos, GUILayout.Height(height));
                 GUILayout.BeginVertical("box");
                 GUILayout.Label("Select Page");
                 var selectedPage = GUILayout.SelectionGrid(_selectedPage, _pages, 1);
@@ -94,11 +137,12 @@ namespace Figma
                     _selectedPage = selectedPage;
                     _selectedFrame = 0;
                 }
+
                 _frames = _parsedFile.document.children[_selectedPage].children.Select(x => x.name).ToArray();
                 GUILayout.EndVertical();
                 EditorGUILayout.EndScrollView();
 
-                _framesScrollPos = EditorGUILayout.BeginScrollView(_framesScrollPos, GUILayout.Height(height), GUILayout.MaxHeight(300));
+                _framesScrollPos = EditorGUILayout.BeginScrollView(_framesScrollPos, GUILayout.Height(height));
                 GUILayout.BeginVertical("box");
                 GUILayout.Label("Select Frame");
                 _selectedFrame = GUILayout.SelectionGrid(_selectedFrame, _frames, 1);
@@ -107,14 +151,28 @@ namespace Figma
 
                 GUILayout.EndHorizontal();
 
-                if(_pages != null && _pages.Length > 0 && _frames.Length > 0)
+                if (_pages != null && _pages.Length > 0 && _frames.Length > 0)
                 {
-                    if (GUILayout.Button("Create"))
+                    GUILayout.Space(10);
+                    if (GUILayout.Button("Create Prefab", GUILayout.Height(30)))
                         CreatePrefab();
                 }
             }
+        }
+        
+        private T CreateAsset<T>(string defaultName) where T : ScriptableObject
+        {
+            var asset = CreateInstance<T>();
+            var path = EditorUtility.SaveFilePanelInProject("Save " + typeof(T).Name, defaultName, "asset", "Please enter a file name to save the asset to");
+            if (!string.IsNullOrEmpty(path))
+            {
+                AssetDatabase.CreateAsset(asset, path);
+                AssetDatabase.SaveAssets();
+                EditorUtility.FocusProjectWindow();
+                Selection.activeObject = asset;
+            }
 
-            EditorGUILayout.EndVertical();
+            return asset;
         }
 
         private void CreatePrefab()
