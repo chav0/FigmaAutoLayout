@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Figma.Creators;
+using Figma.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +11,18 @@ namespace Figma
 	[CreateAssetMenu(menuName = "Figma/LayoutPipeline")]
 	public class LayoutPipeline : ScriptableObject
 	{
-		[SerializeField] private CreatorsList creators;
+		[SerializeField] private CreatorsList creators = new()
+		{
+			Creators = new List<CreatorBase>
+			{
+				new TextCreator(),
+				new RectTransformCreator(),
+				new ImageCreator(),
+				new VerticalGroupCreator(),
+				new HorizontalGroupCreator(),
+				new ContentSizeFitterCreator()
+			} 
+		};
 
 		public CreatorsList Creators => creators;
 	}
