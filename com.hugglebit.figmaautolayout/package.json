@@ -1,0 +1,22 @@
+{
+  "name": "com.hugglebit.figmaautolayout",
+  "version": "1.0.0",
+  "displayName": "Figma Auto Layout",
+  "description": "A Figma-like auto layout tool for Unity Editor. Makes arranging UI elements easier and snappier.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Hugglebit",
+    "url": "https://github.com/chav0"
+  },
+  "keywords": [
+    "figma",
+    "auto-layout",
+    "ui",
+    "editor-tool",
+    "layout"
+  ],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.0.1",
+    "com.unity.textmeshpro": "3.0.6"
+  }
+}
