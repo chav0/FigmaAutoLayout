@@ -19,7 +19,7 @@
 Edit your Unity project's `Packages/manifest.json` and add:
 
 ```json
-"com.hugglebit.figmaautolayout": "https://github.com/chav0/com.hugglebit.figmaautolayout.git#main"
+"com.hugglebit.figmaautolayout": "https://github.com/chav0/FigmaAutoLayout.git?path=FigmaAutoLayout"
 ```
 
 ---
@@ -33,7 +33,7 @@ You can also install this package directly from the Unity Editor:
 3. Paste this URL:
 
 ```
-https://github.com/chav0/com.hugglebit.figmaautolayout.git
+https://github.com/chav0/FigmaAutoLayout.git?path=FigmaAutoLayout
 ```
 
 ---
