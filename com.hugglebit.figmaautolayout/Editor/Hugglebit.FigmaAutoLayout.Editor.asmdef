@@ -1,0 +1,20 @@
+{
+  "name": "Hugglebit.FigmaAutoLayout.Editor",
+  "rootNamespace": "Hugglebit.FigmaAutoLayout.Editor",
+  "references": [
+    "Unity.TextMeshPro",
+    "UnityEngine.TextCoreFontEngineModule", 
+    "UnityEngine.TextCoreTextEngineModule",
+    "UnityEngine.TextRenderingModule",
+    "Unity.Newtonsoft.Json"
+  ],
+  "includePlatforms": [ "Editor" ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
