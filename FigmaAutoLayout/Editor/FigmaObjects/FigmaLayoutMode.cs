@@ -4,6 +4,7 @@ namespace Figma.Objects
     {
         NONE,
         HORIZONTAL,
-        VERTICAL
+        VERTICAL,
+        GRID
     }
 }
