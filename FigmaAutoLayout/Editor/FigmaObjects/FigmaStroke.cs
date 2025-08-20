@@ -22,7 +22,8 @@
         FIXED, // min
         CENTER, // center
         MAX, // max
-        SPACE_BETWEEN // auto size between elements
+        SPACE_BETWEEN, // auto size between elements
+        BASELINE
     }
 
     public enum FigmaSizing
