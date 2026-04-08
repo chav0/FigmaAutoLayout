@@ -1,0 +1,136 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+
+    <Style src="FigmaAutoLayoutWindowStyle.uss" />
+
+    <ui:ScrollView name="root" class="panel">
+
+        <!-- Header -->
+        <ui:VisualElement class="panel__header">
+            <ui:Label text="Figma Auto Layout" class="panel__header-title" />
+        </ui:VisualElement>
+
+        <!-- Auth section — always visible, content swaps based on state -->
+        <ui:VisualElement class="panel__section">
+            <ui:Label text="Figma Account" class="panel__section-title" />
+            <ui:VisualElement class="panel__section-body">
+
+                <!-- State: not authorized -->
+                <ui:VisualElement name="auth-login">
+                    <ui:VisualElement class="token-row">
+                        <ui:VisualElement class="token-field-wrap">
+                            <ui:TextField label="Token" name="figma-token" password="true" class="token-row__field" />
+                            <ui:Button name="btn-toggle-password" class="btn-eye" tooltip="Show / hide token" />
+                        </ui:VisualElement>
+                        <ui:Button text="?" name="btn-token-info" class="btn-info" tooltip="How to get a token" />
+                    </ui:VisualElement>
+                    <ui:Label name="token-status" class="token-status" />
+
+                    <!-- Help panel (hidden by default, toggled by ?) -->
+                    <ui:VisualElement name="token-help" class="token-help">
+                    <ui:Label text="How to get a Figma token" class="token-help__title" />
+                    <ui:Label text="1. Open Figma → click avatar → Settings" class="token-help__step" />
+                    <ui:Label text="2. Go to Security tab" class="token-help__step" />
+                    <ui:Label text="3. Scroll to Personal access tokens" class="token-help__step" />
+                    <ui:Label text="4. Click Generate new token" class="token-help__step" />
+                    <ui:Label text="5. Set scopes:" class="token-help__step" />
+                    <ui:VisualElement class="token-help__scope-item">
+                        <ui:VisualElement class="token-help__scope-body">
+                            <ui:Label text="current_user:read" class="token-help__scope-name" />
+                            <ui:Label text="Read the current user's name, email, and profile image" class="token-help__scope-desc" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="token-help__scope-item">
+                        <ui:VisualElement class="token-help__scope-body">
+                            <ui:Label text="file_content:read" class="token-help__scope-name" />
+                            <ui:Label text="Read the contents of and render images from files" class="token-help__scope-desc" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label text="6. Copy the token and paste it above" class="token-help__step" />
+                        <ui:Image name="token-help-image" class="token-help__image" />
+                        <ui:Button text="Open Figma Settings →" name="btn-open-figma" class="btn-link token-help__link" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- State: authorized -->
+                <ui:VisualElement name="auth-authorized" class="auth-authorized">
+                    <ui:Label name="user-info" class="auth-authorized__user" />
+                    <ui:Button text="Sign out" name="btn-sign-out" class="btn-sign-out" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Main content (visible only when authorized) -->
+        <ui:VisualElement name="main-content" class="main-content">
+
+            <!-- Import -->
+            <ui:VisualElement class="panel__section">
+                <ui:Label text="Import" class="panel__section-title" />
+                <ui:VisualElement class="panel__section-body">
+                    <ui:TextField label="File URL" name="file-url" />
+                    <ui:Button text="Import from Figma" name="btn-parse" class="btn-parse btn-parse--hidden" />
+                    <ui:Label name="import-status" class="import-status" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- File browser (hidden until file is loaded) -->
+            <ui:VisualElement name="file-browser" class="file-browser">
+
+                <!-- Pages + Frames side by side -->
+                <ui:VisualElement class="panel__section browser-lists">
+                    <ui:VisualElement class="browser-col">
+                        <ui:Label text="Pages" class="browser-col__title" />
+                        <ui:ScrollView name="pages-scroll" class="browser-col__scroll">
+                            <ui:VisualElement name="pages-list" />
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="browser-col">
+                        <ui:Label text="Frames" class="browser-col__title" />
+                        <ui:TextField name="frame-search" class="browser-search" />
+                        <ui:ScrollView name="frames-scroll" class="browser-col__scroll">
+                            <ui:VisualElement name="frames-list" />
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Preview -->
+                <ui:VisualElement class="panel__section">
+                    <ui:Label name="preview-label" text="Preview" class="panel__section-title" style="display: none;" />
+                    <ui:Image name="frame-preview" class="frame-preview" />
+                    <ui:Label name="preview-loading" class="import-status" />
+                </ui:VisualElement>
+
+                <!-- Actions — two columns -->
+                <ui:VisualElement class="actions-row">
+
+                    <!-- Save Sprites -->
+                    <ui:VisualElement class="action-col">
+                        <ui:Label text="Save Sprites" class="action-col__title" />
+                        <ui:VisualElement class="folder-row">
+                            <ui:TextField name="sprites-folder-path" class="folder-row__path" />
+                            <ui:Button text="..." name="btn-browse-sprites" class="btn-browse" tooltip="Select sprites folder" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="action-col__spacer" />
+                        <ui:Button text="Save Sprite" name="btn-save-sprite" class="btn-save-sprite" />
+                    </ui:VisualElement>
+
+                    <!-- Create Prefab -->
+                    <ui:VisualElement class="action-col">
+                        <ui:Label text="Create Prefab" class="action-col__title" />
+                        <ui:VisualElement class="folder-row">
+                            <ui:TextField name="prefab-folder-path" class="folder-row__path" />
+                            <ui:Button text="..." name="btn-browse-folder" class="btn-browse" tooltip="Select prefabs folder" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="pipeline-dropdown-container" />
+                        <ui:Button text="Create Prefab" name="btn-create" class="btn-create" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+
+</ui:UXML>

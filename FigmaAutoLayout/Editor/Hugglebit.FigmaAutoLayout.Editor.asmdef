@@ -6,7 +6,9 @@
     "UnityEngine.TextCoreFontEngineModule", 
     "UnityEngine.TextCoreTextEngineModule",
     "UnityEngine.TextRenderingModule",
-    "Unity.Newtonsoft.Json"
+    "Unity.Newtonsoft.Json",
+    "MackySoft.SerializeReferenceExtensions",
+    "MackySoft.SerializeReferenceExtensions.Editor"
   ],
   "includePlatforms": [ "Editor" ],
   "excludePlatforms": [],

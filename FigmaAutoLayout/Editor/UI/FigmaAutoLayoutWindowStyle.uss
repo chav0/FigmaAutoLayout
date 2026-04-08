@@ -1,0 +1,621 @@
+/* ===========================================
+   Panel — Figma-style right panel
+   =========================================== */
+
+.panel {
+    background-color: #2C2C2C;
+}
+
+/* ===========================================
+   Header
+   =========================================== */
+
+.panel__header {
+    padding: 12px 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: #383838;
+}
+
+.panel__header-title {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: #FFFFFF;
+}
+
+/* ===========================================
+   Main content — hidden until authorized
+   =========================================== */
+
+.main-content {
+    display: none;
+}
+
+.main-content--visible {
+    display: flex;
+}
+
+/* ===========================================
+   Auth — authorized state (hidden by default)
+   =========================================== */
+
+.auth-authorized {
+    display: none;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-authorized--visible {
+    display: flex;
+}
+
+.auth-authorized__user {
+    font-size: 11px;
+    color: #B3B3B3;
+}
+
+.btn-sign-out {
+    background-color: transparent;
+    border-width: 0;
+    color: #888888;
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
+.btn-sign-out:hover {
+    color: #D4564A;
+    background-color: transparent;
+}
+
+/* Auth — login state (hidden when authorized) */
+.auth-login--hidden {
+    display: none;
+}
+
+/* ===========================================
+   Section — flat, divider-separated
+   =========================================== */
+
+.panel__section {
+    padding: 10px 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: #383838;
+}
+
+.panel__section-title {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+    margin-bottom: 8px;
+}
+
+.panel__section-body > * {
+    margin-bottom: 4px;
+}
+
+/* Foldout inside section */
+.panel__foldout > .unity-foldout__toggle > .unity-toggle__input > .unity-label {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+}
+
+/* Field labels — muted, Figma-like */
+.panel__section-body Label {
+    color: #B3B3B3;
+    font-size: 11px;
+    min-width: 90px;
+}
+
+/* Text inputs — dark, blending with panel */
+.panel__section-body TextField > #unity-text-input,
+.panel__section-body IntegerField > #unity-text-input {
+    background-color: #383838;
+    border-color: #4A4A4A;
+    border-radius: 4px;
+    color: #FFFFFF;
+    padding: 3px 6px;
+}
+
+.panel__section-body TextField > #unity-text-input:focus,
+.panel__section-body IntegerField > #unity-text-input:focus {
+    border-color: #0C8CE9;
+}
+
+/* ===========================================
+   Folder picker row
+   =========================================== */
+
+.folder-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.folder-row__path {
+    flex-grow: 1;
+}
+
+.btn-browse {
+    width: 24px;
+    height: 18px;
+    background-color: #4A4A4A;
+    border-width: 0;
+    border-radius: 3px;
+    color: #B3B3B3;
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.btn-browse:hover {
+    background-color: #5A5A5A;
+    color: #FFFFFF;
+}
+
+/* ===========================================
+   Token row — field + Get Token link
+   =========================================== */
+
+.token-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.token-field-wrap {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+}
+
+.token-row__field {
+    flex-grow: 1;
+}
+
+.token-row__field > #unity-text-input {
+    padding-right: 22px;
+}
+
+/* Eye toggle — inside the text field */
+.btn-eye {
+    position: absolute;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    background-color: transparent;
+    border-width: 0;
+    padding: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: #B3B3B3;
+}
+
+.btn-eye:hover {
+    -unity-background-image-tint-color: #FFFFFF;
+}
+
+.btn-eye--visible {
+    -unity-background-image-tint-color: #B3B3B3;
+}
+
+/* Info button — circular ⓘ */
+.btn-info {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: #4A4A4A;
+    border-width: 0;
+    color: #B3B3B3;
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+.btn-info:hover {
+    background-color: #5A5A5A;
+    color: #FFFFFF;
+}
+
+.btn-info:active {
+    background-color: #0C8CE9;
+    color: #FFFFFF;
+}
+
+/* Link button */
+.btn-link {
+    background-color: transparent;
+    border-width: 0;
+    color: #0C8CE9;
+    font-size: 11px;
+    padding: 2px 0;
+    cursor: link;
+}
+
+.btn-link:hover {
+    color: #3DA5F5;
+    background-color: transparent;
+}
+
+.btn-link:active {
+    color: #0A6BBF;
+    background-color: transparent;
+}
+
+/* ===========================================
+   Token help panel (collapsed by default)
+   =========================================== */
+
+.token-help {
+    display: none;
+    background-color: #333333;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.token-help--visible {
+    display: flex;
+}
+
+.token-help__title {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+    margin-bottom: 6px;
+}
+
+.token-help__step {
+    font-size: 11px;
+    color: #B3B3B3;
+    margin-bottom: 2px;
+    padding-left: 4px;
+}
+
+/* Scope items — mimic Figma's scope list */
+.token-help__scope-item {
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: #2C2C2C;
+    border-radius: 3px;
+    padding: 4px 8px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    margin-left: 12px;
+}
+
+.token-help__scope-check {
+    font-size: 16px;
+    color: #0C8CE9;
+    margin-right: 0;
+    margin-left: -2px;
+    margin-top: 0;
+    padding: 0;
+    min-width: 16px;
+    max-width: 16px;
+}
+
+.token-help__scope-body {
+    flex-grow: 1;
+}
+
+.token-help__scope-name {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+    margin-bottom: 1px;
+}
+
+.token-help__scope-desc {
+    font-size: 10px;
+    color: #888888;
+    margin-bottom: 0;
+}
+
+.token-help__image {
+    min-height: 100px;
+    max-height: 200px;
+    background-color: #2C2C2C;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #4A4A4A;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.token-help__link {
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+/* Token validation status */
+.token-status {
+    font-size: 11px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    display: none;
+}
+
+.token-status--ok {
+    color: #57A64A;
+    display: flex;
+}
+
+.token-status--error {
+    color: #D4564A;
+    display: flex;
+}
+
+.token-status--loading {
+    color: #B3B3B3;
+    display: flex;
+}
+
+/* ===========================================
+   Import button
+   =========================================== */
+
+.btn-parse {
+    margin-top: 4px;
+    height: 30px;
+    background-color: #0C8CE9;
+    border-color: #0A7BD4;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 12px;
+    -unity-font-style: bold;
+}
+
+.btn-parse:hover {
+    background-color: #3DA5F5;
+}
+
+.btn-parse:active {
+    background-color: #0A6BBF;
+}
+
+.btn-parse--hidden {
+    display: none;
+}
+
+/* ===========================================
+   Recent files dropdown
+   =========================================== */
+
+.recent-dropdown {
+    display: none;
+    position: absolute;
+    background-color: #383838;
+    border-width: 1px;
+    border-color: #4A4A4A;
+    border-radius: 0 0 4px 4px;
+    padding: 2px 0;
+    overflow: hidden;
+}
+
+.recent-dropdown--visible {
+    display: flex;
+}
+
+.recent-dropdown__item {
+    padding: 5px 8px;
+}
+
+.recent-dropdown__item:hover {
+    background-color: #0C8CE9;
+}
+
+.recent-dropdown__item > Label {
+    font-size: 11px;
+    color: #B3B3B3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recent-dropdown__item:hover > Label {
+    color: #FFFFFF;
+}
+
+.import-status {
+    font-size: 11px;
+    color: #B3B3B3;
+    margin-top: 4px;
+    display: none;
+}
+
+.import-status--visible {
+    display: flex;
+}
+
+.import-status--error {
+    color: #D4564A;
+    display: flex;
+}
+
+/* ===========================================
+   File browser — pages/frames
+   =========================================== */
+
+.file-browser {
+    display: none;
+}
+
+.file-browser--visible {
+    display: flex;
+}
+
+.browser-lists {
+    flex-direction: row;
+    padding: 0;
+    min-height: 180px;
+    max-height: 320px;
+}
+
+.browser-col {
+    flex: 1;
+    padding: 8px;
+}
+
+.browser-col__title {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+    margin-bottom: 6px;
+}
+
+.browser-col__scroll {
+    flex-grow: 1;
+    background-color: #333333;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.browser-search {
+    margin-bottom: 4px;
+}
+
+.browser-search > #unity-text-input {
+    background-color: #383838;
+    border-color: #4A4A4A;
+    border-radius: 4px;
+    color: #FFFFFF;
+    padding: 3px 6px;
+    font-size: 11px;
+}
+
+.browser-item {
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 1px;
+}
+
+.browser-item:hover {
+    background-color: #4A4A4A;
+}
+
+.browser-item--selected {
+    background-color: #0C8CE9;
+}
+
+.browser-item--selected:hover {
+    background-color: #3DA5F5;
+}
+
+.browser-item > Label {
+    font-size: 11px;
+    color: #B3B3B3;
+}
+
+.browser-item--selected > Label {
+    color: #FFFFFF;
+}
+
+/* ===========================================
+   Frame preview
+   =========================================== */
+
+.frame-preview {
+    display: none;
+    min-height: 100px;
+    max-height: 300px;
+    margin: 0 16px;
+    border-radius: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.frame-preview--visible {
+    display: flex;
+}
+
+/* ===========================================
+   Actions — two-column layout
+   =========================================== */
+
+.actions-row {
+    flex-direction: row;
+    padding: 8px 12px;
+    border-top-width: 1px;
+    border-top-color: #383838;
+}
+
+.action-col {
+    flex: 1;
+    padding: 4px;
+    flex-direction: column;
+}
+
+.action-col__spacer {
+    flex-grow: 1;
+}
+
+.action-col__title {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: #EBEBEB;
+    margin-bottom: 6px;
+}
+
+.btn-save-sprite {
+    height: 28px;
+    background-color: #0C8CE9;
+    border-color: #0A7BD4;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 11px;
+    -unity-font-style: bold;
+    margin-top: 6px;
+}
+
+.btn-save-sprite:hover {
+    background-color: #3DA5F5;
+}
+
+.btn-save-sprite:active {
+    background-color: #0A6BBF;
+}
+
+.btn-create {
+    height: 28px;
+    background-color: #57A64A;
+    border-color: #4A8F40;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 11px;
+    -unity-font-style: bold;
+    margin-top: 6px;
+}
+
+.btn-create:hover {
+    background-color: #6BBF5E;
+}
+
+.btn-create:active {
+    background-color: #4A8F40;
+}
+
+/* Pipeline error */
+.pipeline-error {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.pipeline-error__icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.pipeline-error__label {
+    color: #F44336;
+    font-size: 11px;
+    -unity-font-style: italic;
+    white-space: normal;
+}
