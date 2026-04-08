@@ -9,7 +9,7 @@ using static Figma.Objects.FigmaObjectType;
 namespace Figma.PipelineSteps
 {
 	[Serializable]
-    internal class ImagePipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class ImagePipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {

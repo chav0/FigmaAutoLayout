@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Figma.PipelineSteps
 {
 	[Serializable]
-    internal class ContentSizeFitterPipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class ContentSizeFitterPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {

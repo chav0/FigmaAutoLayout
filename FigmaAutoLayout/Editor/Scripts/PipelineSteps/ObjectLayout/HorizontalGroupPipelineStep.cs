@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace Figma.PipelineSteps
 {
     [Serializable]
-    internal class HorizontalGroupPipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class HorizontalGroupPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {

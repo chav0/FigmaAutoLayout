@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Figma.PipelineSteps
 {
 	[Serializable]
-    internal class RectTransformPipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class RectTransformPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {

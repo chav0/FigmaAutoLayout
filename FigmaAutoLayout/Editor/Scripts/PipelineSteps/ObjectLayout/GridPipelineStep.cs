@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace Figma.PipelineSteps
 {
     [Serializable]
-    internal class GridPipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class GridPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {

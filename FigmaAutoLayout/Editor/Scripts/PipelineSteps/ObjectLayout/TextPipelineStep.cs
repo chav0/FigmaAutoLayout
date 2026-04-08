@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Figma.PipelineSteps
 {
 	[Serializable]
-    internal class TextPipelineStep : FigmaLayoutPipelineObjectStepBase
+    public class TextPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
         public override void Execute(ObjectLayoutContext context)
         {
