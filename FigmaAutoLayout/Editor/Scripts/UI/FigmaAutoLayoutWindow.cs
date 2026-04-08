@@ -1,3 +1,4 @@
+using System.Threading;
 using Figma.Exporters;
 using Figma.Utils;
 using UnityEditor;
@@ -12,6 +13,7 @@ namespace Figma
         private readonly FigmaTokenStorage _tokenStorage = new();
         private PrefabExporter _prefabExporter;
         private SpriteExporter _spriteExporter;
+        private CancellationTokenSource _cts;
 
         [MenuItem("Tools/UI/Figma Auto Layout")]
         public static void ShowWindow()
@@ -53,14 +55,19 @@ namespace Figma
             if (_settings != null && rootVisualElement?.Q("pipeline-dropdown-container") != null)
                 RefreshSettingsUI();
         }
+        
+        private CancellationToken ResetCancellation()
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = new CancellationTokenSource();
+            return _cts.Token;
+        }
 
         private void OnDestroy()
         {
-            EditorApplication.update -= PollValidation;
-            EditorApplication.update -= PollImport;
-            EditorApplication.update -= PollThumbnail;
-            EditorApplication.update -= PollVariantSprites;
-            
+            _cts?.Cancel();
+            _cts?.Dispose();
             _client?.Dispose();
         }
     }

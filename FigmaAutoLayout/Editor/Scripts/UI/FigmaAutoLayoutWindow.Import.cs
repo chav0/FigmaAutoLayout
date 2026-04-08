@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Figma.Objects;
 using Figma.Utils;
@@ -31,8 +32,6 @@ namespace Figma
         private Label _importStatus;
         private Button _btnParse;
 
-        private Task<FigmaFile> _importTask;
-        private Task<byte[]> _thumbnailTask;
         private string _previewNodeId;
 
         private TextField _fileUrlField;
@@ -66,14 +65,14 @@ namespace Figma
                 _fileUrlField.schedule.Execute(() => HideRecentDropdown()).ExecuteLater(150);
             });
 
-            _btnParse.clicked += () => StartImport(_fileUrlField.value);
+            _btnParse.clicked += () => _ = StartImport(_fileUrlField.value);
             _frameSearch.RegisterValueChangedCallback(_ => RebuildFramesList());
         }
 
         private List<string> LoadRecentFiles()
         {
             var json = EditorPrefs.GetString(RecentFilesKey, "[]");
-            
+
             try
             {
                 return JsonConvert.DeserializeObject<List<string>>(json) ?? new List<string>();
@@ -86,7 +85,7 @@ namespace Figma
 
         private void SaveRecentFile(string url)
         {
-            if (string.IsNullOrWhiteSpace(url)) 
+            if (string.IsNullOrWhiteSpace(url))
                 return;
 
             var recent = LoadRecentFiles();
@@ -139,7 +138,7 @@ namespace Figma
             _recentDropdown.EnableInClassList("recent-dropdown--visible", false);
         }
 
-        private void StartImport(string fileUrl)
+        private async Task StartImport(string fileUrl)
         {
             try
             {
@@ -155,37 +154,29 @@ namespace Figma
             _btnParse.SetEnabled(false);
             ResetFileBrowser();
 
+            var ct = ResetCancellation();
+
             var token = _tokenStorage.LoadToken()?.Trim();
             _client?.Dispose();
             _client = new FigmaApiClient(token);
 
-            _importTask = Task.Run(async () => await _client.GetFileAsync(_fileKey));
-            EditorApplication.update += PollImport;
-        }
-
-        private void PollImport()
-        {
-            if (_importTask == null || !_importTask.IsCompleted)
-                return;
-
-            EditorApplication.update -= PollImport;
-            _btnParse.SetEnabled(true);
-
             try
             {
-                _parsedFile = _importTask.Result;
-                SetImportStatus(null, null);
+                _parsedFile = await _client.GetFileAsync(_fileKey, ct);
+                SetImportStatus();
                 SaveRecentFile(_fileUrlField.value);
                 ShowFileBrowser();
             }
+            catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                var inner = e is AggregateException ae ? ae.Flatten().InnerException : e;
-                Debug.LogWarning($"[FigmaAutoLayout] Import failed: {inner?.Message}");
-                SetImportStatus("error", $"Import failed: {inner?.Message}");
+                Debug.LogWarning($"[FigmaAutoLayout] Import failed: {e.Message}");
+                SetImportStatus("error", $"Import failed: {e.Message}");
             }
-
-            _importTask = null;
+            finally
+            {
+                _btnParse.SetEnabled(true);
+            }
         }
 
         private void ShowFileBrowser()
@@ -242,7 +233,7 @@ namespace Figma
                 _framesList.Add(item);
             }
 
-            RequestThumbnail();
+            _ = RequestThumbnail();
         }
 
         private void SelectFrame(int index)
@@ -269,7 +260,7 @@ namespace Figma
             return item;
         }
 
-        private void RequestThumbnail()
+        private async Task RequestThumbnail()
         {
             var children = _parsedFile.document.children[_selectedPage].children;
             if (children == null || _selectedFrame >= children.Length) return;
@@ -284,21 +275,11 @@ namespace Figma
             _previewLoading.text = "Loading preview...";
             _previewLoading.EnableInClassList("import-status--visible", true);
 
-            EditorApplication.update -= PollThumbnail;
-            _thumbnailTask = Task.Run(async () => await _client.GetNodeThumbnailAsync(_fileKey, nodeId));
-            EditorApplication.update += PollThumbnail;
-        }
-
-        private void PollThumbnail()
-        {
-            if (_thumbnailTask == null || !_thumbnailTask.IsCompleted) return;
-
-            EditorApplication.update -= PollThumbnail;
-            _previewLoading.EnableInClassList("import-status--visible", false);
-
             try
             {
-                var bytes = _thumbnailTask.Result;
+                var bytes = await _client.GetNodeThumbnailAsync(_fileKey, nodeId, ct: _cts?.Token ?? CancellationToken.None);
+                _previewLoading.EnableInClassList("import-status--visible", false);
+
                 var tex = FigmaTextureHelper.CreateFromBytes(bytes);
                 if (tex != null)
                 {
@@ -307,15 +288,15 @@ namespace Figma
                     _previewLabel.style.display = DisplayStyle.Flex;
                 }
             }
+            catch (OperationCanceledException) { }
             catch (Exception e)
             {
+                _previewLoading.EnableInClassList("import-status--visible", false);
                 Debug.LogWarning($"[FigmaAutoLayout] Preview failed: {e.Message}");
             }
-
-            _thumbnailTask = null;
         }
 
-        private void SetImportStatus(string state, string message)
+        private void SetImportStatus(string state = null, string message = null)
         {
             if (_importStatus == null)
                 return;
@@ -330,15 +311,6 @@ namespace Figma
             _parsedFile = null;
             _previewNodeId = null;
             _fileBrowser?.EnableInClassList("file-browser--visible", false);
-
-            EditorApplication.update -= PollImport;
-            EditorApplication.update -= PollThumbnail;
-            EditorApplication.update -= PollVariantSprites;
-
-            _importTask = null;
-            _thumbnailTask = null;
-            _variantSpritesTask = null;
-            _pendingVariantChildren = null;
         }
     }
 }

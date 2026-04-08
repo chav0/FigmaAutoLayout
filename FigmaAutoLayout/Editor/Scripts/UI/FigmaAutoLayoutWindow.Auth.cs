@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Figma.Objects;
 using UnityEditor;
 using UnityEngine;
@@ -17,7 +16,6 @@ namespace Figma
         private VisualElement _authLogin;
         private VisualElement _authAuthorized;
         private VisualElement _mainContent;
-        private Task<FigmaUser> _validateTask;
 
         private void SetupAuth()
         {
@@ -90,41 +88,26 @@ namespace Figma
             }
         }
 
-        private void ValidateToken(string token)
+        private async void ValidateToken(string token)
         {
             SetTokenStatus("loading", "Validating...");
 
-            _validateTask = Task.Run(async () =>
-            {
-                using var client = new FigmaApiClient(token);
-                return await client.GetCurrentUserAsync();
-            });
-
-            EditorApplication.update += PollValidation;
-        }
-
-        private void PollValidation()
-        {
-            if (_validateTask == null || !_validateTask.IsCompleted)
-                return;
-
-            EditorApplication.update -= PollValidation;
+            var ct = ResetCancellation();
 
             try
             {
-                var user = _validateTask.Result;
+                using var client = new FigmaApiClient(token);
+                var user = await client.GetCurrentUserAsync(ct);
                 SetTokenStatus("ok", null);
                 SetAuthState(true, $"{user.handle} ({user.email})");
             }
+            catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                var inner = e is AggregateException ae ? ae.Flatten().InnerException : e;
-                Debug.LogWarning($"[FigmaAutoLayout] Token validation failed: {inner?.Message}");
+                Debug.LogWarning($"[FigmaAutoLayout] Token validation failed: {e.Message}");
                 SetTokenStatus("error", "Invalid token — check token or scopes");
                 SetAuthState(false, null);
             }
-
-            _validateTask = null;
         }
 
         private void SignOut()

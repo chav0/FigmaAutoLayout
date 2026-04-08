@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Figma.Objects;
-using Figma.Utils;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,8 +11,6 @@ namespace Figma
     public partial class FigmaAutoLayoutWindow
     {
         private TextField _spritesFolderField;
-        private Task<Dictionary<string, byte[]>> _variantSpritesTask;
-        private FigmaObject[] _pendingVariantChildren;
 
         private void SetupSprites()
         {
@@ -27,7 +23,7 @@ namespace Figma
             btnBrowse.clicked += () =>
             {
                 var abs = EditorUtility.OpenFolderPanel("Select Sprites Folder", _spritesFolderField.value, "");
-                
+
                 if (!string.IsNullOrEmpty(abs) && abs.StartsWith(Application.dataPath))
                     _spritesFolderField.value = "Assets" + abs.Substring(Application.dataPath.Length);
             };
@@ -50,54 +46,39 @@ namespace Figma
 
             if (frame.type == FigmaObjectType.COMPONENT_SET && frame.children is { Length: > 0 })
             {
-                SaveVariantSprites(frame);
+                _ = SaveVariantSprites(frame);
                 return;
             }
 
             var tex = _framePreview.image as Texture2D;
-            
+
             _spriteExporter.Export(tex, frame.name);
         }
 
-        private void SaveVariantSprites(FigmaObject componentSet)
+        private async Task SaveVariantSprites(FigmaObject componentSet)
         {
-            _pendingVariantChildren = componentSet.children;
-            var nodeIds = _pendingVariantChildren.Select(c => c.id).ToArray();
+            var children = componentSet.children;
+            var nodeIds = children.Select(c => c.id).ToArray();
 
             SetImportStatus("loading", $"Downloading {nodeIds.Length} variant sprites...");
 
-            EditorApplication.update -= PollVariantSprites;
-            
-            _variantSpritesTask = Task.Run(async () => await _client.GetNodesThumbnailsAsync(_fileKey, nodeIds));
-            
-            EditorApplication.update += PollVariantSprites;
-        }
-
-        private void PollVariantSprites()
-        {
-            if (_variantSpritesTask == null || !_variantSpritesTask.IsCompleted)
-                return;
-
-            EditorApplication.update -= PollVariantSprites;
-
             try
             {
-                var results = _variantSpritesTask.Result;
-                var saved = _spriteExporter.ExportVariants(results, _pendingVariantChildren);
+                var results = await _client.GetNodesThumbnailsAsync(_fileKey, nodeIds, ct: _cts?.Token ?? default);
+                var saved = _spriteExporter.ExportVariants(results, children);
 
-                SetImportStatus(null, null);
+                SetImportStatus();
                 Debug.Log($"[FigmaAutoLayout] Saved {saved} variant sprites.");
+            }
+            catch (OperationCanceledException)
+            {
+                SetImportStatus();
             }
             catch (Exception e)
             {
-                var inner = e is AggregateException ae ? ae.Flatten().InnerException : e;
-                
-                Debug.LogWarning($"[FigmaAutoLayout] Variant sprites failed: {inner?.Message}");
-                SetImportStatus("error", $"Variant sprites failed: {inner?.Message}");
+                Debug.LogWarning($"[FigmaAutoLayout] Variant sprites failed: {e.Message}");
+                SetImportStatus("error", $"Variant sprites failed: {e.Message}");
             }
-
-            _variantSpritesTask = null;
-            _pendingVariantChildren = null;
         }
     }
 }
