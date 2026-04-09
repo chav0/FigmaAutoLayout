@@ -46,6 +46,7 @@ namespace Figma
             SetupAuth();
             SetupHelpPanel();
             SetupImport();
+            SetupHierarchy();
             SetupSprites();
             SetupPrefabs();
         }
@@ -68,6 +69,8 @@ namespace Figma
         {
             _cts?.Cancel();
             _cts?.Dispose();
+            _imageCts?.Cancel();
+            _imageCts?.Dispose();
             _client?.Dispose();
         }
     }

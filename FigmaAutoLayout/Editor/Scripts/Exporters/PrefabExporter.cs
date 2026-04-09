@@ -4,7 +4,6 @@ using Figma.PipelineSteps;
 using Figma.Utils;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Figma.Exporters
@@ -13,6 +12,8 @@ namespace Figma.Exporters
     {
         private readonly string _prefabsPath;
         private readonly FigmaComponentList _componentList;
+        private readonly FigmaIconMap _iconMap;
+        private FigmaFile _file;
         private List<FigmaPreLayoutPipelineStepBase> _preSteps;
         private List<FigmaLayoutPipelineObjectStepBase> _objectSteps;
         private List<FigmaPostLayoutPipelineStepBase> _postSteps;
@@ -23,6 +24,7 @@ namespace Figma.Exporters
         {
             _prefabsPath = settings.PrefabFolderPath;
             _componentList = settings.ComponentList;
+            _iconMap = settings.IconMap;
         }
 
         public void SetPipeline(FigmaLayoutPipelineProfile profile)
@@ -32,11 +34,9 @@ namespace Figma.Exporters
             _postSteps = profile.PostLayoutSteps;
         }
 
-        public void Export(FigmaFile file, int selectedPage, int selectedFrame)
+        public void Export(FigmaFile file, FigmaObject frame)
         {
-            var page = file.document.children[selectedPage];
-            var frame = page.children[selectedFrame];
-
+            _file = file;
             _componentList.Clean();
 
             var preContext = new PreLayoutContext(frame);
@@ -85,29 +85,23 @@ namespace Figma.Exporters
             var frameRect = baseLayer.GetComponent<RectTransform>();
             if (frameRect == null)
                 frameRect = baseLayer.AddComponent<RectTransform>();
-            
+
             frameRect.pivot = new Vector2(0f, 1f);
             frameRect.anchorMin = new Vector2(0f, 1f);
             frameRect.anchorMax = new Vector2(0f, 1f);
             frameRect.anchoredPosition = Vector2.zero;
-            
+
             if (frame.absoluteBoundingBox.width != null && frame.absoluteBoundingBox.height != null)
                 frameRect.sizeDelta = new Vector2(frame.absoluteBoundingBox.width.Value, frame.absoluteBoundingBox.height.Value);
 
-            if (FigmaColorHelper.NeedAddImage(frame.fills))
-            {
-                var frameImage = baseLayer.GetComponent<Image>();
-                if (frameImage == null)
-                    frameImage = baseLayer.AddComponent<Image>();
-                frameImage.color = FigmaColorHelper.CalculateColor(frame.fills);
-            }
+            var rootCtx = new ObjectLayoutContext(baseLayer, frame, null, frame, _iconMap);
+            foreach (var step in _objectSteps)
+                step?.Execute(rootCtx);
 
             if (frame.children != null)
             {
                 foreach (var child in frame.children)
-                {
                     CreateGameObject(child, frame, baseLayer.GetComponent<RectTransform>());
-                }
             }
 
             return SavePrefab(baseLayer, prefabName);
@@ -118,27 +112,32 @@ namespace Figma.Exporters
             if (componentSet.children == null || componentSet.children.Length == 0)
                 return null;
 
-            var originPrefabName = FigmaAssetPathHelper.SanitizeName(componentSet.name);
-            var originPrefab = CreatePrefab(componentSet.children[0], originPrefabName);
+            var componentName = FigmaAssetPathHelper.SanitizeName(componentSet.name);
+            var componentKey = _file.GetComponentKey(componentSet.id) ?? componentSet.id;
+            var originPrefab = CreatePrefab(componentSet.children[0], componentName);
+
+            _componentList.AddComponent(componentKey, componentName, originPrefab);
 
             foreach (var child in componentSet.children)
-            {
-                CreateVariant(originPrefab, child);
-            }
+                CreateVariant(componentKey, componentName, originPrefab, child);
 
             return originPrefab;
         }
 
-        private void CreateVariant(GameObject originPrefab, FigmaObject variantFigmaObject)
+        private void CreateVariant(string componentKey, string componentName,
+            GameObject originPrefab, FigmaObject variantFigmaObject)
         {
-            var objSource = (GameObject)PrefabUtility.InstantiatePrefab(originPrefab);
-            var variantPrefabName = FigmaAssetPathHelper.ExtractVariantPrefabName(variantFigmaObject.name);
-            var variantColor = FigmaAssetPathHelper.ExtractVariantColor(variantFigmaObject.name);
-            
-            var component = _componentList.FindByName(variantPrefabName);
-            var variant = component == null ? SavePrefab(objSource, variantPrefabName) : component.prefab;
+            var variantName = FigmaAssetPathHelper.ExtractVariantPrefabName(componentName, variantFigmaObject.name);
+            var variantKey = _file.GetComponentKey(variantFigmaObject.id) ?? variantFigmaObject.id;
 
-            _componentList.Add(variantFigmaObject.id, variantPrefabName, variant, variantColor, true);
+            var existingPrefab = _componentList.FindPrefab(variantKey, variantName);
+            if (existingPrefab == null)
+            {
+                var objSource = (GameObject)PrefabUtility.InstantiatePrefab(originPrefab);
+                existingPrefab = SavePrefab(objSource, variantName);
+            }
+
+            _componentList.AddVariant(componentKey, componentName, variantKey, variantName, existingPrefab);
         }
 
         private void CreateGameObject(FigmaObject figmaObject, FigmaObject rootFrame, Transform parent)
@@ -151,7 +150,7 @@ namespace Figma.Exporters
                 if (objChild != null)
                 {
                     var rectStep = new RectTransformPipelineStep();
-                    rectStep.Execute(new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame));
+                    rectStep.Execute(new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _iconMap));
                     return;
                 }
             }
@@ -166,7 +165,7 @@ namespace Figma.Exporters
 
             if (figmaObject.type != FigmaObjectType.DOCUMENT && figmaObject.type != FigmaObjectType.CANVAS)
             {
-                var ctx = new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame);
+                var ctx = new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _iconMap);
                 
                 foreach (var step in _objectSteps)
                     step?.Execute(ctx);
@@ -200,32 +199,32 @@ namespace Figma.Exporters
 
                 PrefabUtility.RecordPrefabInstancePropertyModifications(instance.GetComponent<Transform>());
 
-                var isMain = figmaObject.type == FigmaObjectType.COMPONENT;
-                var componentKey = isMain ? figmaObject.id : figmaObject.componentId;
-                _componentList.Add(componentKey, prefabName, prefab, string.Empty, isMain);
+                var componentKey = _file.GetComponentKey(figmaObject.id) ?? figmaObject.id;
+                _componentList.AddComponent(componentKey, prefabName, prefab);
             }
         }
 
         private GameObject InstantiatePrefab(FigmaObject figmaObject)
         {
             var componentName = FigmaAssetPathHelper.SanitizeName(figmaObject.name);
-            var component = _componentList.Find(figmaObject.componentId, componentName);
-            if (component != null)
+            var componentKey = _file.GetComponentKey(figmaObject.componentId) ?? figmaObject.componentId;
+
+            var prefab = _componentList.FindPrefab(componentKey, componentName);
+            if (prefab != null)
             {
-                var instance = (GameObject) PrefabUtility.InstantiatePrefab(component.prefab);
+                var instance = (GameObject) PrefabUtility.InstantiatePrefab(prefab);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(instance.GetComponent<Transform>());
                 return instance;
             }
 
             var path = _prefabsPath.TrimEnd('/');
-            var prefabName = FigmaAssetPathHelper.SanitizeName(figmaObject.name);
-            var guids = AssetDatabase.FindAssets($"t:Prefab {prefabName}", new[] {path});
+            var guids = AssetDatabase.FindAssets($"t:Prefab {componentName}", new[] {path});
             foreach (var guid in guids)
             {
-                var prefab = (GameObject) AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(GameObject));
-                if (prefab != null && prefab.name == prefabName)
+                var found = (GameObject) AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(GameObject));
+                if (found != null && found.name == componentName)
                 {
-                    var instance = (GameObject) PrefabUtility.InstantiatePrefab(prefab);
+                    var instance = (GameObject) PrefabUtility.InstantiatePrefab(found);
                     PrefabUtility.RecordPrefabInstancePropertyModifications(instance.GetComponent<Transform>());
                     return instance;
                 }

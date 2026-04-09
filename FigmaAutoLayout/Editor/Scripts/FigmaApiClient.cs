@@ -30,7 +30,7 @@ namespace Figma
             return JsonConvert.DeserializeObject<FigmaFile>(json);
         }
 
-        public async Task<byte[]> GetNodeThumbnailAsync(string fileKey, string nodeId, float scale = 1f, CancellationToken ct = default)
+        public async Task<byte[]> GetNodeImageAsync(string fileKey, string nodeId, float scale = 1f, CancellationToken ct = default)
         {
             var encodedIds = Uri.EscapeDataString(nodeId);
             var scaleStr = scale.ToString(CultureInfo.InvariantCulture);
@@ -49,7 +49,7 @@ namespace Figma
             return await GetBytesAsync(imageUrl, ct).ConfigureAwait(false);
         }
 
-        public async Task<Dictionary<string, byte[]>> GetNodesThumbnailsAsync(string fileKey, string[] nodeIds, float scale = 1f, CancellationToken ct = default)
+        public async Task<Dictionary<string, byte[]>> GetNodesImagesAsync(string fileKey, string[] nodeIds, float scale = 1f, CancellationToken ct = default)
         {
             var encodedIds = Uri.EscapeDataString(string.Join(",", nodeIds));
             var scaleStr = scale.ToString(CultureInfo.InvariantCulture);

@@ -29,7 +29,7 @@ namespace Figma.Utils
             return sanitized;
         }
 
-        public static string ExtractVariantPrefabName(string variantName)
+        public static string ExtractVariantPrefabName(string originPrefabName, string variantName)
         {
             var sanitized = SanitizeName(variantName);
             var properties = sanitized.Split(',');
@@ -41,21 +41,7 @@ namespace Figma.Utils
             }
             
             if (properties.Length > 0 && TryExtractPropertyValue(properties[0], out var firstPropertyValue))
-                return firstPropertyValue;
-
-            return sanitized;
-        }
-
-        public static string ExtractVariantColor(string variantName)
-        {
-            var sanitized = SanitizeName(variantName);
-            var properties = sanitized.Split(',');
-            
-            foreach (var property in properties)
-            {
-                if (property.StartsWith("Color", true, CultureInfo.InvariantCulture) && TryExtractPropertyValue(property, out var colorName))
-                    return colorName;
-            }
+                return $"{originPrefabName}_{firstPropertyValue}";
 
             return sanitized;
         }

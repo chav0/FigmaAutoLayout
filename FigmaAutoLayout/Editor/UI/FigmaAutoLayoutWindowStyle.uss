@@ -619,3 +619,48 @@
     -unity-font-style: italic;
     white-space: normal;
 }
+
+/* Open in Figma */
+.btn-open-figma {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #3D3D3D;
+    color: #B0B0B0;
+    border-width: 1px;
+    border-color: #555;
+    -unity-font-style: normal;
+}
+
+.btn-open-figma:hover {
+    background-color: #4A4A4A;
+    color: #FFFFFF;
+}
+
+/* Hierarchy column */
+.browser-col--hierarchy {
+    flex: 1.5;
+    min-width: 120px;
+}
+
+.hierarchy-tree {
+    flex-grow: 1;
+    background-color: #333333;
+    border-radius: 4px;
+}
+
+.hierarchy-tree .unity-tree-view__item {
+    font-size: 11px;
+    color: #D0D0D0;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.hierarchy-tree .unity-tree-view__item:hover {
+    background-color: #3A3A3A;
+}
+
+.hierarchy-tree .unity-tree-view__item--selected {
+    background-color: #2C5D87;
+    color: #FFFFFF;
+}

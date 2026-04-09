@@ -91,11 +91,18 @@
                             <ui:VisualElement name="frames-list" />
                         </ui:ScrollView>
                     </ui:VisualElement>
+                    <ui:VisualElement name="hierarchy-col" class="browser-col browser-col--hierarchy">
+                        <ui:Label text="Hierarchy" class="browser-col__title" />
+                        <ui:TreeView name="hierarchy-tree" class="browser-col__scroll hierarchy-tree" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
 
                 <!-- Preview -->
                 <ui:VisualElement class="panel__section">
-                    <ui:Label name="preview-label" text="Preview" class="panel__section-title" style="display: none;" />
+                    <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center; display: none;" name="preview-header">
+                        <ui:Label name="preview-label" text="Preview" class="panel__section-title" />
+                        <ui:Button name="btn-open-in-figma" text="Open in Figma" class="btn-open-figma" tooltip="Open this frame in Figma" />
+                    </ui:VisualElement>
                     <ui:Image name="frame-preview" class="frame-preview" />
                     <ui:Label name="preview-loading" class="import-status" />
                 </ui:VisualElement>

@@ -42,17 +42,20 @@ namespace Figma
             if (_parsedFile == null || _client == null)
                 return;
 
-            var frame = _parsedFile.document.children[_selectedPage].children[_selectedFrame];
+            var node = SelectedFigmaObject;
+            if (node == null)
+                return;
 
-            if (frame.type == FigmaObjectType.COMPONENT_SET && frame.children is { Length: > 0 })
+            if (node.type == FigmaObjectType.COMPONENT_SET && node.children is { Length: > 0 })
             {
-                _ = SaveVariantSprites(frame);
+                _ = SaveVariantSprites(node);
                 return;
             }
 
             var tex = _framePreview.image as Texture2D;
 
-            _spriteExporter.Export(tex, frame.name);
+            _spriteExporter.Export(tex, node.name);
+            SaveSettings();
         }
 
         private async Task SaveVariantSprites(FigmaObject componentSet)
@@ -64,8 +67,9 @@ namespace Figma
 
             try
             {
-                var results = await _client.GetNodesThumbnailsAsync(_fileKey, nodeIds, ct: _cts?.Token ?? default);
+                var results = await _client.GetNodesImagesAsync(_fileKey, nodeIds, ct: _cts?.Token ?? default);
                 var saved = _spriteExporter.ExportVariants(results, children);
+                SaveSettings();
 
                 SetImportStatus();
                 Debug.Log($"[FigmaAutoLayout] Saved {saved} variant sprites.");

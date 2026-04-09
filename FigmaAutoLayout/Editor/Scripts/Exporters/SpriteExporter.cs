@@ -10,10 +10,12 @@ namespace Figma.Exporters
     public class SpriteExporter
     {
         private readonly string _spritesPath;
+        private readonly FigmaIconMap _iconMap;
 
         public SpriteExporter(FigmaAutoLayoutSettings settings)
         {
             _spritesPath = settings.SpritesFolderPath;
+            _iconMap = settings.IconMap;
         }
 
         public void Export(Texture2D texture, string frameName)
@@ -24,7 +26,7 @@ namespace Figma.Exporters
                 return;
             }
 
-            SaveSprite(texture, frameName);
+            SaveSprite(texture, frameName, frameName);
         }
 
         public void Export(byte[] pngBytes, string frameName)
@@ -53,14 +55,14 @@ namespace Figma.Exporters
                     continue;
 
                 var spriteName = FigmaAssetPathHelper.ExtractVariantSpriteName(child.name);
-                SaveSprite(texture, spriteName);
+                SaveSprite(texture, spriteName, child.name);
                 saved++;
             }
 
             return saved;
         }
 
-        private void SaveSprite(Texture2D texture, string name)
+        private void SaveSprite(Texture2D texture, string name, string originalName)
         {
             if (string.IsNullOrEmpty(_spritesPath))
             {
@@ -82,9 +84,14 @@ namespace Figma.Exporters
                 importer.SaveAndReimport();
             }
 
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(filePath);
+            if (sprite != null)
+                _iconMap.Add(originalName, sprite);
+
             EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<Object>(filePath));
-            
+
             Debug.Log($"[FigmaAutoLayout] Sprite saved: {filePath}");
         }
+
     }
 }

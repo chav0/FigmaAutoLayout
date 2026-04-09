@@ -1,5 +1,6 @@
 using System;
 using Figma.Objects;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Figma.PipelineSteps
@@ -7,6 +8,8 @@ namespace Figma.PipelineSteps
 	[Serializable]
     public class ContentSizeFitterPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
+        [SerializeField] private bool turnOn;
+        
         public override void Execute(ObjectLayoutContext context)
         {
             var figmaObject = context.FigmaObject;
@@ -17,7 +20,8 @@ namespace Figma.PipelineSteps
                 figmaObject.primaryAxisSizingMode == FigmaSizing.FIXED)
                 return;
 
-            var contentSizeFitter = context.GameObject.AddComponent<ContentSizeFitter>(); 
+            var contentSizeFitter = context.GameObject.AddComponent<ContentSizeFitter>();
+            contentSizeFitter.enabled = turnOn;
             switch (figmaObject.layoutMode)
             {
                 case FigmaLayoutMode.HORIZONTAL:

@@ -1,4 +1,5 @@
 using System.Linq;
+using Figma.Objects;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,29 +9,30 @@ namespace Figma
     public partial class FigmaAutoLayoutWindow
     {
         private TextField _prefabFolderField;
+        private Button _btnCreate;
         private PopupField<string> _pipelineDropdown;
         private string _selectedPipelineId;
-        
+
         private FigmaLayoutPipelineProfile SelectedPipeline => _settings.GetPipeline(_selectedPipelineId);
 
         private void SetupPrefabs()
         {
             _prefabFolderField = rootVisualElement.Q<TextField>("prefab-folder-path");
             var btnBrowse = rootVisualElement.Q<Button>("btn-browse-folder");
-            var btnCreate = rootVisualElement.Q<Button>("btn-create");
+            _btnCreate = rootVisualElement.Q<Button>("btn-create");
 
             _prefabFolderField.value = _settings.PrefabFolderPath;
 
             btnBrowse.clicked += () =>
             {
                 var abs = EditorUtility.OpenFolderPanel("Select Prefabs Folder", _prefabFolderField.value, "");
-                
+
                 if (!string.IsNullOrEmpty(abs) && abs.StartsWith(Application.dataPath))
                     _prefabFolderField.value = "Assets" + abs.Substring(Application.dataPath.Length);
             };
 
             SetupPipelineDropdown();
-            btnCreate.clicked += CreatePrefab;
+            _btnCreate.clicked += CreatePrefab;
         }
 
         private void RefreshPrefabsUI()
@@ -75,6 +77,13 @@ namespace Figma
             container.Add(_pipelineDropdown);
         }
 
+        private void UpdateCreateButtonState()
+        {
+            var node = SelectedFigmaObject;
+            var canExport = node != null && (node.type & FigmaObjectType.EXPORTABLE) != FigmaObjectType.NONE;
+            _btnCreate?.SetEnabled(canExport);
+        }
+
         private void CreatePrefab()
         {
             if (_parsedFile == null || _settings == null)
@@ -88,7 +97,7 @@ namespace Figma
             }
 
             _prefabExporter.SetPipeline(pipeline);
-            _prefabExporter.Export(_parsedFile, _selectedPage, _selectedFrame);
+            _prefabExporter.Export(_parsedFile, SelectedFigmaObject);
 
             SaveSettings(); 
         }

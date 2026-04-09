@@ -8,6 +8,8 @@ namespace Figma.PipelineSteps
     [Serializable]
     public class VerticalGroupPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
+        [SerializeField] private bool turnOn;
+        
         public override void Execute(ObjectLayoutContext context)
         {
             var figmaObject = context.FigmaObject;
@@ -15,6 +17,7 @@ namespace Figma.PipelineSteps
                 return;
 
             var group = context.GameObject.AddComponent<VerticalLayoutGroup>();
+            group.enabled = turnOn;
             group.spacing = figmaObject.itemSpacing;
             group.padding = new RectOffset(
                 (int)figmaObject.paddingLeft,
@@ -31,10 +34,6 @@ namespace Figma.PipelineSteps
             group.childForceExpandHeight = isSpaceBetween;
         }
 
-        // NOTE: SPACE_BETWEEN mapping preserved from original code.
-        // Possibly a bug: counter axis is horizontal for vertical layout,
-        // so FIXED should map to Left, not Upper. But with forceExpand=true
-        // the alignment value is effectively ignored by Unity.
         private static TextAnchor ResolveAlignment(FigmaObject figmaObject)
         {
             var h = figmaObject.primaryAxisAlignItems;
@@ -51,9 +50,9 @@ namespace Figma.PipelineSteps
                 (FigmaLayoutAlign.MAX, FigmaLayoutAlign.FIXED) => TextAnchor.LowerLeft,
                 (FigmaLayoutAlign.MAX, FigmaLayoutAlign.CENTER) => TextAnchor.LowerCenter,
                 (FigmaLayoutAlign.MAX, FigmaLayoutAlign.MAX) => TextAnchor.LowerRight,
-                (FigmaLayoutAlign.SPACE_BETWEEN, FigmaLayoutAlign.FIXED) => TextAnchor.UpperCenter,
+                (FigmaLayoutAlign.SPACE_BETWEEN, FigmaLayoutAlign.FIXED) => TextAnchor.MiddleLeft,
                 (FigmaLayoutAlign.SPACE_BETWEEN, FigmaLayoutAlign.CENTER) => TextAnchor.MiddleCenter,
-                (FigmaLayoutAlign.SPACE_BETWEEN, FigmaLayoutAlign.MAX) => TextAnchor.LowerCenter,
+                (FigmaLayoutAlign.SPACE_BETWEEN, FigmaLayoutAlign.MAX) => TextAnchor.MiddleRight,
                 _ => TextAnchor.UpperLeft
             };
         }

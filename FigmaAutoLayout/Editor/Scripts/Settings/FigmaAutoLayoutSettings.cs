@@ -23,6 +23,7 @@ namespace Figma
         };
 
         [SerializeField] private FigmaComponentList componentList = new();
+        [SerializeField] private FigmaIconMap iconMap = new();
 
         public string PrefabFolderPath => PrefabFolder != null ? AssetDatabase.GetAssetPath(prefabFolder) : "";
         public string SpritesFolderPath => SpritesFolder != null ? AssetDatabase.GetAssetPath(spritesFolder) : "";
@@ -47,6 +48,7 @@ namespace Figma
         public string[] PipelineIds => pipelines.Select(p => p.Id).ToArray();
 
         public FigmaComponentList ComponentList => componentList;
+        public FigmaIconMap IconMap => iconMap;
 
         public static FigmaAutoLayoutSettings GetOrCreate()
         {

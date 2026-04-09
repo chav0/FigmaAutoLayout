@@ -8,6 +8,8 @@ namespace Figma.PipelineSteps
     [Serializable]
     public class HorizontalGroupPipelineStep : FigmaLayoutPipelineObjectStepBase
     {
+        [SerializeField] private bool turnOn;
+        
         public override void Execute(ObjectLayoutContext context)
         {
             var figmaObject = context.FigmaObject;
@@ -15,6 +17,7 @@ namespace Figma.PipelineSteps
                 return;
 
             var group = context.GameObject.AddComponent<HorizontalLayoutGroup>();
+            group.enabled = turnOn;
             group.spacing = figmaObject.itemSpacing;
             group.padding = new RectOffset(
                 (int)figmaObject.paddingLeft,

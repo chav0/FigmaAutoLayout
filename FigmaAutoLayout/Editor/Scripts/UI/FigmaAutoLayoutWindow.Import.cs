@@ -21,18 +21,20 @@ namespace Figma
         private string _fileKey;
         private int _selectedPage;
         private int _selectedFrame;
+        private FigmaObject _selectedNode;
 
         private VisualElement _fileBrowser;
         private VisualElement _pagesList;
         private VisualElement _framesList;
         private TextField _frameSearch;
         private Image _framePreview;
-        private Label _previewLabel;
+        private VisualElement _previewHeader;
         private Label _previewLoading;
         private Label _importStatus;
         private Button _btnParse;
 
         private string _previewNodeId;
+        private CancellationTokenSource _imageCts;
 
         private TextField _fileUrlField;
         private VisualElement _recentDropdown;
@@ -47,8 +49,11 @@ namespace Figma
             _framesList = rootVisualElement.Q<VisualElement>("frames-list");
             _frameSearch = rootVisualElement.Q<TextField>("frame-search");
             _framePreview = rootVisualElement.Q<Image>("frame-preview");
-            _previewLabel = rootVisualElement.Q<Label>("preview-label");
+            _previewHeader = rootVisualElement.Q<VisualElement>("preview-header");
             _previewLoading = rootVisualElement.Q<Label>("preview-loading");
+
+            var btnOpenInFigma = rootVisualElement.Q<Button>("btn-open-in-figma");
+            btnOpenInFigma.clicked += OpenFrameInFigma;
 
             _recentDropdown = new VisualElement();
             _recentDropdown.AddToClassList("recent-dropdown");
@@ -233,7 +238,11 @@ namespace Figma
                 _framesList.Add(item);
             }
 
-            _ = RequestThumbnail();
+            _ = RequestImage();
+
+            var frame = _parsedFile.document.children[_selectedPage].children[_selectedFrame];
+            BuildHierarchyTree(frame);
+            UpdateCreateButtonState();
         }
 
         private void SelectFrame(int index)
@@ -260,24 +269,36 @@ namespace Figma
             return item;
         }
 
-        private async Task RequestThumbnail()
+        private async Task RequestImage(string nodeId = null)
         {
-            var children = _parsedFile.document.children[_selectedPage].children;
-            if (children == null || _selectedFrame >= children.Length) return;
+            if (nodeId == null)
+            {
+                var children = _parsedFile.document.children[_selectedPage].children;
+                if (children == null || _selectedFrame >= children.Length) return;
+                nodeId = children[_selectedFrame].id;
+            }
 
-            var nodeId = children[_selectedFrame].id;
             if (nodeId == _previewNodeId) return;
 
             _previewNodeId = nodeId;
             _framePreview.image = null;
             _framePreview.EnableInClassList("frame-preview--visible", false);
-            _previewLabel.style.display = DisplayStyle.None;
+            _previewHeader.style.display = DisplayStyle.None;
             _previewLoading.text = "Loading preview...";
             _previewLoading.EnableInClassList("import-status--visible", true);
 
+            _imageCts?.Cancel();
+            _imageCts?.Dispose();
+            _imageCts = new CancellationTokenSource();
+            var ct = _imageCts.Token;
+
             try
             {
-                var bytes = await _client.GetNodeThumbnailAsync(_fileKey, nodeId, ct: _cts?.Token ?? CancellationToken.None);
+                var bytes = await _client.GetNodeImageAsync(_fileKey, nodeId, ct: ct);
+
+                if (nodeId != _previewNodeId)
+                    return;
+
                 _previewLoading.EnableInClassList("import-status--visible", false);
 
                 var tex = FigmaTextureHelper.CreateFromBytes(bytes);
@@ -285,12 +306,14 @@ namespace Figma
                 {
                     _framePreview.image = tex;
                     _framePreview.EnableInClassList("frame-preview--visible", true);
-                    _previewLabel.style.display = DisplayStyle.Flex;
+                    _previewHeader.style.display = DisplayStyle.Flex;
                 }
             }
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
+                if (nodeId != _previewNodeId)
+                    return;
                 _previewLoading.EnableInClassList("import-status--visible", false);
                 Debug.LogWarning($"[FigmaAutoLayout] Preview failed: {e.Message}");
             }
@@ -306,11 +329,23 @@ namespace Figma
             _importStatus.EnableInClassList("import-status--error", state == "error");
         }
 
+        private void OpenFrameInFigma()
+        {
+            if (string.IsNullOrEmpty(_fileKey) || string.IsNullOrEmpty(_previewNodeId))
+                return;
+
+            var nodeParam = _previewNodeId.Replace(":", "-");
+            var url = $"https://www.figma.com/design/{_fileKey}?node-id={nodeParam}";
+            Application.OpenURL(url);
+        }
+
         private void ResetFileBrowser()
         {
             _parsedFile = null;
             _previewNodeId = null;
             _fileBrowser?.EnableInClassList("file-browser--visible", false);
+            ClearHierarchy();
+            UpdateCreateButtonState();
         }
     }
 }
