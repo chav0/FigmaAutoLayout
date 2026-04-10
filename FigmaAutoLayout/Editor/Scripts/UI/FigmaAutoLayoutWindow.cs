@@ -49,6 +49,8 @@ namespace Figma
             SetupHierarchy();
             SetupSprites();
             SetupPrefabs();
+
+            LoadCachedFile();
         }
 
         private void OnFocus()

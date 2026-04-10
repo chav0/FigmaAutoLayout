@@ -117,6 +117,7 @@
                             <ui:TextField name="sprites-folder-path" class="folder-row__path" />
                             <ui:Button text="..." name="btn-browse-sprites" class="btn-browse" tooltip="Select sprites folder" />
                         </ui:VisualElement>
+                        <ui:VisualElement name="existing-sprite-field" class="existing-sprite-row" />
                         <ui:VisualElement class="action-col__spacer" />
                         <ui:Button text="Save Sprite" name="btn-save-sprite" class="btn-save-sprite" />
                     </ui:VisualElement>

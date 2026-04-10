@@ -79,7 +79,7 @@ namespace Figma
         {
             for (var i = components.Count - 1; i >= 0; i--)
             {
-                if (components[i].prefab == null && components[i].variants.Count == 0)
+                if (components[i].prefab == null && (components[i].variants.Count == 0 || components[i].variants.All(x => x.prefab == null)))
                     components.RemoveAt(i);
             }
         }

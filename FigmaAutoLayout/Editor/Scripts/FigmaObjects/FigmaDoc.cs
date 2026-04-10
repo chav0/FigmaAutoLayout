@@ -14,6 +14,13 @@ namespace Figma.Objects
                 return meta.key;
             return null;
         }
+
+        public string GetComponentSetId(string nodeId)
+        {
+            if (components != null && components.TryGetValue(nodeId, out var meta))
+                return meta.componentSetId;
+            return null;
+        }
     }
 
     public class FigmaDocument

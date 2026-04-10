@@ -9,16 +9,16 @@ namespace Figma.PipelineSteps
         public FigmaObject FigmaObject { get; }
         public Transform ParentTransform { get; }
         public FigmaObject RootFrame { get; }
-        public FigmaIconMap IconMap { get; }
+        public FigmaSpriteMap SpriteMap { get; }
 
         public ObjectLayoutContext(GameObject gameObject, FigmaObject figmaObject,
-            Transform parentTransform, FigmaObject rootFrame, FigmaIconMap iconMap = null)
+            Transform parentTransform, FigmaObject rootFrame, FigmaSpriteMap spriteMap = null)
         {
             GameObject = gameObject;
             FigmaObject = figmaObject;
             ParentTransform = parentTransform;
             RootFrame = rootFrame;
-            IconMap = iconMap;
+            SpriteMap = spriteMap;
         }
     }
 }

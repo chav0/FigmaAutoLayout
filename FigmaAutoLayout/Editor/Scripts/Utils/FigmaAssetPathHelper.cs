@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,8 @@ namespace Figma.Utils
     public static class FigmaAssetPathHelper
     {
         private static readonly char[] InvalidChars = Path.GetInvalidFileNameChars().Concat(new[] { ' ', '/' }).Distinct().ToArray();
+        
+        public static readonly string StorageDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".figma-autolayout");
 
         public static string SanitizeName(string name) => new(name.Where(c => !InvalidChars.Contains(c)).ToArray());
 

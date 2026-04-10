@@ -10,15 +10,15 @@ namespace Figma.Exporters
     public class SpriteExporter
     {
         private readonly string _spritesPath;
-        private readonly FigmaIconMap _iconMap;
+        private readonly FigmaSpriteMap _spriteMap;
 
         public SpriteExporter(FigmaAutoLayoutSettings settings)
         {
             _spritesPath = settings.SpritesFolderPath;
-            _iconMap = settings.IconMap;
+            _spriteMap = settings.SpriteMap;
         }
 
-        public void Export(Texture2D texture, string frameName)
+        public void Export(Texture2D texture, FigmaObject node, FigmaFile file)
         {
             if (texture == null)
             {
@@ -26,16 +26,11 @@ namespace Figma.Exporters
                 return;
             }
 
-            SaveSprite(texture, frameName, frameName);
+            var id = ResolveComponentKey(node, file);
+            SaveSprite(texture, node.name, node.name, id);
         }
 
-        public void Export(byte[] pngBytes, string frameName)
-        {
-            var texture = FigmaTextureHelper.CreateFromBytes(pngBytes);
-            Export(texture, frameName);
-        }
-
-        public int ExportVariants(Dictionary<string, byte[]> nodeImages, FigmaObject[] children)
+        public int ExportVariants(Dictionary<string, byte[]> nodeImages, FigmaObject[] children, FigmaFile file)
         {
             if (string.IsNullOrEmpty(_spritesPath))
             {
@@ -55,14 +50,32 @@ namespace Figma.Exporters
                     continue;
 
                 var spriteName = FigmaAssetPathHelper.ExtractVariantSpriteName(child.name);
-                SaveSprite(texture, spriteName, child.name);
+                var id = ResolveComponentKey(child, file);
+                SaveSprite(texture, spriteName, child.name, id);
                 saved++;
             }
 
             return saved;
         }
 
-        private void SaveSprite(Texture2D texture, string name, string originalName)
+        private static string ResolveComponentKey(FigmaObject node, FigmaFile file)
+        {
+            if (file == null)
+                return null;
+
+            switch (node.type)
+            {
+                case FigmaObjectType.COMPONENT:
+                case FigmaObjectType.COMPONENT_SET:
+                    return file.GetComponentKey(node.id);
+                case FigmaObjectType.INSTANCE:
+                    return file.GetComponentKey(node.componentId);
+                default:
+                    return null;
+            }
+        }
+
+        private void SaveSprite(Texture2D texture, string name, string originalName, string id)
         {
             if (string.IsNullOrEmpty(_spritesPath))
             {
@@ -86,12 +99,11 @@ namespace Figma.Exporters
 
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(filePath);
             if (sprite != null)
-                _iconMap.Add(originalName, sprite);
+                _spriteMap.Add(originalName, sprite, id);
 
             EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<Object>(filePath));
 
             Debug.Log($"[FigmaAutoLayout] Sprite saved: {filePath}");
         }
-
     }
 }

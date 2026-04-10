@@ -24,10 +24,38 @@ namespace Figma
 
         public async Task<FigmaFile> GetFileAsync(string fileKey, CancellationToken ct = default)
         {
-            using var response = await _httpClient.GetAsync($"files/{fileKey}", ct).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var json = await GetStringAsync($"files/{fileKey}", ct).ConfigureAwait(false);
             return JsonConvert.DeserializeObject<FigmaFile>(json);
+        }
+
+        public async Task<FigmaFile> GetFileNodesAsync(string fileKey, string nodeId, CancellationToken ct = default)
+        {
+            var encodedIds = Uri.EscapeDataString(nodeId);
+            var json = await GetStringAsync($"files/{fileKey}/nodes?ids={encodedIds}", ct).ConfigureAwait(false);
+            var response = JsonConvert.DeserializeObject<FileNodesResponse>(json);
+
+            if (response?.nodes == null || !response.nodes.TryGetValue(nodeId, out var nodeData) || nodeData?.document == null)
+                throw new Exception($"Node {nodeId} not found in file.");
+
+            return new FigmaFile
+            {
+                name = response.name,
+                components = nodeData.components,
+                document = new FigmaDocument
+                {
+                    type = FigmaObjectType.DOCUMENT,
+                    name = response.name,
+                    children = new[]
+                    {
+                        new FigmaPage
+                        {
+                            name = "Page",
+                            type = FigmaObjectType.CANVAS,
+                            children = new[] { nodeData.document }
+                        }
+                    }
+                }
+            };
         }
 
         public async Task<byte[]> GetNodeImageAsync(string fileKey, string nodeId, float scale = 1f, CancellationToken ct = default)
@@ -35,10 +63,7 @@ namespace Figma
             var encodedIds = Uri.EscapeDataString(nodeId);
             var scaleStr = scale.ToString(CultureInfo.InvariantCulture);
 
-            using var response = await _httpClient.GetAsync($"images/{fileKey}?ids={encodedIds}&format=png&scale={scaleStr}", ct).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var json = await GetStringAsync($"images/{fileKey}?ids={encodedIds}&format=png&scale={scaleStr}", ct).ConfigureAwait(false);
             var result = JsonConvert.DeserializeObject<ImageExportResponse>(json);
 
             if (result?.images == null
@@ -54,10 +79,7 @@ namespace Figma
             var encodedIds = Uri.EscapeDataString(string.Join(",", nodeIds));
             var scaleStr = scale.ToString(CultureInfo.InvariantCulture);
 
-            using var response = await _httpClient.GetAsync($"images/{fileKey}?ids={encodedIds}&format=png&scale={scaleStr}", ct).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var json = await GetStringAsync($"images/{fileKey}?ids={encodedIds}&format=png&scale={scaleStr}", ct).ConfigureAwait(false);
             var result = JsonConvert.DeserializeObject<ImageExportResponse>(json);
 
             var textures = new Dictionary<string, byte[]>();
@@ -78,10 +100,15 @@ namespace Figma
 
         public async Task<FigmaUser> GetCurrentUserAsync(CancellationToken ct = default)
         {
-            using var response = await _httpClient.GetAsync("me", ct).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var json = await GetStringAsync("me", ct).ConfigureAwait(false);
             return JsonConvert.DeserializeObject<FigmaUser>(json);
+        }
+
+        private async Task<string> GetStringAsync(string url, CancellationToken ct)
+        {
+            using var response = await _httpClient.GetAsync(url, ct).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
         private async Task<byte[]> GetBytesAsync(string url, CancellationToken ct)
@@ -96,7 +123,19 @@ namespace Figma
             public string err;
             public Dictionary<string, string> images;
         }
-        
+
+        private class FileNodesResponse
+        {
+            public string name;
+            public Dictionary<string, FileNodeData> nodes;
+        }
+
+        private class FileNodeData
+        {
+            public FigmaObject document;
+            public Dictionary<string, FigmaComponentMeta> components;
+        }
+
         public void Dispose() => _httpClient?.Dispose();
     }
 }

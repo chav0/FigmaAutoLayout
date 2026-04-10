@@ -4,6 +4,7 @@ using Figma.PipelineSteps;
 using Figma.Utils;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Figma.Exporters
@@ -12,7 +13,7 @@ namespace Figma.Exporters
     {
         private readonly string _prefabsPath;
         private readonly FigmaComponentList _componentList;
-        private readonly FigmaIconMap _iconMap;
+        private readonly FigmaSpriteMap _spriteMap;
         private FigmaFile _file;
         private List<FigmaPreLayoutPipelineStepBase> _preSteps;
         private List<FigmaLayoutPipelineObjectStepBase> _objectSteps;
@@ -24,7 +25,7 @@ namespace Figma.Exporters
         {
             _prefabsPath = settings.PrefabFolderPath;
             _componentList = settings.ComponentList;
-            _iconMap = settings.IconMap;
+            _spriteMap = settings.SpriteMap;
         }
 
         public void SetPipeline(FigmaLayoutPipelineProfile profile)
@@ -94,7 +95,7 @@ namespace Figma.Exporters
             if (frame.absoluteBoundingBox.width != null && frame.absoluteBoundingBox.height != null)
                 frameRect.sizeDelta = new Vector2(frame.absoluteBoundingBox.width.Value, frame.absoluteBoundingBox.height.Value);
 
-            var rootCtx = new ObjectLayoutContext(baseLayer, frame, null, frame, _iconMap);
+            var rootCtx = new ObjectLayoutContext(baseLayer, frame, null, frame, _spriteMap);
             foreach (var step in _objectSteps)
                 step?.Execute(rootCtx);
 
@@ -150,7 +151,7 @@ namespace Figma.Exporters
                 if (objChild != null)
                 {
                     var rectStep = new RectTransformPipelineStep();
-                    rectStep.Execute(new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _iconMap));
+                    rectStep.Execute(new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _spriteMap));
                     return;
                 }
             }
@@ -165,7 +166,7 @@ namespace Figma.Exporters
 
             if (figmaObject.type != FigmaObjectType.DOCUMENT && figmaObject.type != FigmaObjectType.CANVAS)
             {
-                var ctx = new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _iconMap);
+                var ctx = new ObjectLayoutContext(objChild, figmaObject, parent, rootFrame, _spriteMap);
                 
                 foreach (var step in _objectSteps)
                     step?.Execute(ctx);
@@ -199,7 +200,29 @@ namespace Figma.Exporters
 
                 PrefabUtility.RecordPrefabInstancePropertyModifications(instance.GetComponent<Transform>());
 
+                RegisterComponent(figmaObject, prefabName, prefab);
+            }
+        }
+
+        private void RegisterComponent(FigmaObject figmaObject, string prefabName, GameObject prefab)
+        {
+            if (figmaObject.type == FigmaObjectType.COMPONENT)
+            {
                 var componentKey = _file.GetComponentKey(figmaObject.id) ?? figmaObject.id;
+                _componentList.AddComponent(componentKey, prefabName, prefab);
+                return;
+            }
+
+            var componentSetId = _file.GetComponentSetId(figmaObject.componentId);
+            if (!string.IsNullOrEmpty(componentSetId))
+            {
+                var componentSetKey = _file.GetComponentKey(componentSetId) ?? componentSetId;
+                var variantKey = _file.GetComponentKey(figmaObject.componentId) ?? figmaObject.componentId;
+                _componentList.AddVariant(componentSetKey, null, variantKey, prefabName, prefab);
+            }
+            else
+            {
+                var componentKey = _file.GetComponentKey(figmaObject.componentId) ?? figmaObject.componentId;
                 _componentList.AddComponent(componentKey, prefabName, prefab);
             }
         }
@@ -230,7 +253,26 @@ namespace Figma.Exporters
                 }
             }
 
+            var sprite = _spriteMap.Find(componentKey) ?? _spriteMap.Find(figmaObject.name);
+            if (sprite != null)
+                return CreateSpriteObject(figmaObject.name, sprite);
+
             return null;
+        }
+
+        private GameObject CreateSpriteObject(string objectName, Sprite sprite)
+        {
+            var obj = new GameObject(objectName, typeof(RectTransform), typeof(Image))
+            {
+                layer = UILayer
+            };
+
+            var image = obj.GetComponent<Image>();
+            image.sprite = sprite;
+            image.type = sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
+            image.raycastTarget = false;
+
+            return obj;
         }
 
         private GameObject SavePrefab(GameObject obj, string prefabName)

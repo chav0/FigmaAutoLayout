@@ -47,7 +47,7 @@ namespace Figma.PipelineSteps
             color = new Color(color.r, color.g, color.b, color.a * figmaObject.opacity.GetValueOrDefault(1f));
             image.color = color;
 
-            var sprite = FindSprite(figmaObject, context.IconMap);
+            var sprite = FindSprite(figmaObject, context.SpriteMap);
             image.sprite = sprite;
 
             if (sprite != null)
@@ -64,9 +64,9 @@ namespace Figma.PipelineSteps
             }
         }
 
-        private static Sprite FindSprite(FigmaObject figmaObject, FigmaIconMap iconMap)
+        private static Sprite FindSprite(FigmaObject figmaObject, FigmaSpriteMap spriteMap)
         {
-            var mapped = iconMap?.Find(figmaObject.name);
+            var mapped = spriteMap?.Find(figmaObject.name);
             if (mapped != null)
                 return mapped;
 
@@ -75,7 +75,7 @@ namespace Figma.PipelineSteps
                 if (fill.type != "IMAGE")
                     continue;
 
-                var byRef = iconMap?.Find(fill.imageRef);
+                var byRef = spriteMap?.Find(fill.imageRef);
                 if (byRef != null)
                     return byRef;
 

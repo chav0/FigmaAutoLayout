@@ -7,13 +7,9 @@ namespace Figma.Utils
 {
     internal sealed class FigmaTokenStorage
     {
-        private const string DirectoryName = ".figma-autolayout";
         private const string FileName = "credentials.json";
 
-        private string ConfigDirectory =>
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), DirectoryName);
-
-        private string FilePath => Path.Combine(ConfigDirectory, FileName);
+        private string FilePath => Path.Combine(FigmaAssetPathHelper.StorageDir, FileName);
 
         internal string LoadToken()
         {
@@ -37,7 +33,7 @@ namespace Figma.Utils
         {
             try
             {
-                Directory.CreateDirectory(ConfigDirectory);
+                Directory.CreateDirectory(FigmaAssetPathHelper.StorageDir);
                 var json = JsonConvert.SerializeObject(new Credentials { token = token }, Formatting.Indented);
                 File.WriteAllText(FilePath, json);
             }

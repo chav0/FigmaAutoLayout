@@ -74,6 +74,36 @@ namespace Figma
             _frameSearch.RegisterValueChangedCallback(_ => RebuildFramesList());
         }
 
+        private void LoadCachedFile()
+        {
+            var (file, url) = FigmaFileCache.Load();
+            if (file == null)
+                return;
+
+            _parsedFile = file;
+
+            try
+            {
+                _fileKey = FigmaUrlHelper.ExtractFileKey(url);
+            }
+            catch
+            {
+                _fileKey = null;
+            }
+
+            if (!string.IsNullOrEmpty(url))
+                _fileUrlField.SetValueWithoutNotify(url);
+
+            var token = _tokenStorage.LoadToken()?.Trim();
+            if (!string.IsNullOrEmpty(token))
+            {
+                _client?.Dispose();
+                _client = new FigmaApiClient(token);
+            }
+
+            ShowFileBrowser();
+        }
+
         private List<string> LoadRecentFiles()
         {
             var json = EditorPrefs.GetString(RecentFilesKey, "[]");
@@ -145,9 +175,11 @@ namespace Figma
 
         private async Task StartImport(string fileUrl)
         {
+            string nodeId;
             try
             {
                 _fileKey = FigmaUrlHelper.ExtractFileKey(fileUrl);
+                nodeId = FigmaUrlHelper.ExtractNodeId(fileUrl);
             }
             catch (Exception e)
             {
@@ -155,8 +187,12 @@ namespace Figma
                 return;
             }
 
-            SetImportStatus("loading", "Loading file from Figma...");
+            var loadingMsg = nodeId != null ? "Loading node from Figma..." : "Loading file from Figma...";
+            
+            SetImportStatus("loading", loadingMsg);
+            
             _btnParse.SetEnabled(false);
+            
             ResetFileBrowser();
 
             var ct = ResetCancellation();
@@ -167,7 +203,12 @@ namespace Figma
 
             try
             {
-                _parsedFile = await _client.GetFileAsync(_fileKey, ct);
+                _parsedFile = nodeId != null
+                    ? await _client.GetFileNodesAsync(_fileKey, nodeId, ct)
+                    : await _client.GetFileAsync(_fileKey, ct);
+
+                FigmaFileCache.Save(_parsedFile, fileUrl);
+                
                 SetImportStatus();
                 SaveRecentFile(_fileUrlField.value);
                 ShowFileBrowser();
@@ -211,6 +252,7 @@ namespace Figma
 
             _selectedFrame = 0;
             _frameSearch.SetValueWithoutNotify("");
+            
             RebuildFramesList();
         }
 
@@ -241,7 +283,9 @@ namespace Figma
             _ = RequestImage();
 
             var frame = _parsedFile.document.children[_selectedPage].children[_selectedFrame];
+            
             BuildHierarchyTree(frame);
+            ClearExistingSprite();
             UpdateCreateButtonState();
         }
 
@@ -271,6 +315,9 @@ namespace Figma
 
         private async Task RequestImage(string nodeId = null)
         {
+            if (_client == null || string.IsNullOrEmpty(_fileKey))
+                return;
+
             if (nodeId == null)
             {
                 var children = _parsedFile.document.children[_selectedPage].children;

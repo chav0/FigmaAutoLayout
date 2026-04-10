@@ -7,7 +7,7 @@ namespace Figma
 {
     public class FigmaAutoLayoutSettings : ScriptableObject
     {
-        private const string DefaultAssetPath = "Assets/FigmaAutoLayoutSettings.asset";
+        private const string DefaultAssetPath = "Assets/FigmaAutoLayout/Editor/FigmaAutoLayoutSettings.asset";
         private const string SearchFilter = "t:FigmaAutoLayoutSettings";
 
         [Tooltip("Folder where generated UI prefabs will be saved")]
@@ -23,7 +23,7 @@ namespace Figma
         };
 
         [SerializeField] private FigmaComponentList componentList = new();
-        [SerializeField] private FigmaIconMap iconMap = new();
+        [SerializeField] private FigmaSpriteMap spriteMap = new();
 
         public string PrefabFolderPath => PrefabFolder != null ? AssetDatabase.GetAssetPath(prefabFolder) : "";
         public string SpritesFolderPath => SpritesFolder != null ? AssetDatabase.GetAssetPath(spritesFolder) : "";
@@ -48,7 +48,7 @@ namespace Figma
         public string[] PipelineIds => pipelines.Select(p => p.Id).ToArray();
 
         public FigmaComponentList ComponentList => componentList;
-        public FigmaIconMap IconMap => iconMap;
+        public FigmaSpriteMap SpriteMap => spriteMap;
 
         public static FigmaAutoLayoutSettings GetOrCreate()
         {
@@ -56,13 +56,16 @@ namespace Figma
             if (guids.Length > 0)
                 return AssetDatabase.LoadAssetAtPath<FigmaAutoLayoutSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
 
+            if (!AssetDatabase.IsValidFolder("Assets/FigmaAutoLayout"))
+                AssetDatabase.CreateFolder("Assets", "FigmaAutoLayout");
+
+            if (!AssetDatabase.IsValidFolder("Assets/FigmaAutoLayout/Editor"))
+                AssetDatabase.CreateFolder("Assets/FigmaAutoLayout", "Editor");
+
             var settings = CreateInstance<FigmaAutoLayoutSettings>();
-            
             AssetDatabase.CreateAsset(settings, DefaultAssetPath);
             AssetDatabase.SaveAssets();
-            
-            Debug.Log($"[FigmaAutoLayout] Created settings at {DefaultAssetPath}");
-            
+
             return settings;
         }
     }

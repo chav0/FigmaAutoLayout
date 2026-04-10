@@ -133,6 +133,8 @@
 
 .folder-row__path {
     flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
 }
 
 .btn-browse {
@@ -548,6 +550,7 @@
     flex: 1;
     padding: 4px;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .action-col__spacer {
