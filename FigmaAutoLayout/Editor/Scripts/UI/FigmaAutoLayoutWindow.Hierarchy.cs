@@ -98,7 +98,7 @@ namespace Figma
                 _selectedNode = null;
             }
 
-            ClearExistingSprite();
+            AutoFillExistingSprite(_selectedNode);
             UpdateCreateButtonState();
         }
 

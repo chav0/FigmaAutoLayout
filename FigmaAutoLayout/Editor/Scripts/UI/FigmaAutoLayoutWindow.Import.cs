@@ -285,7 +285,7 @@ namespace Figma
             var frame = _parsedFile.document.children[_selectedPage].children[_selectedFrame];
             
             BuildHierarchyTree(frame);
-            ClearExistingSprite();
+            AutoFillExistingSprite(frame);
             UpdateCreateButtonState();
         }
 

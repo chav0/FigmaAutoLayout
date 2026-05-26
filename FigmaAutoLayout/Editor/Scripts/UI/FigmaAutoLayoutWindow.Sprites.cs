@@ -50,6 +50,34 @@ namespace Figma
                 _existingSpriteField.value = null;
         }
 
+        private void AutoFillExistingSprite(FigmaObject node)
+        {
+            if (_existingSpriteField == null)
+                return;
+
+            if (node == null)
+            {
+                _existingSpriteField.value = null;
+                return;
+            }
+
+            var sprite = FindSpriteInProject(node.name);
+            _existingSpriteField.value = sprite;
+        }
+
+        private static Sprite FindSpriteInProject(string spriteName)
+        {
+            var guids = AssetDatabase.FindAssets($"t:Sprite {spriteName}", new[] { "Assets" });
+            foreach (var guid in guids)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid));
+                if (sprite != null && sprite.name == spriteName)
+                    return sprite;
+            }
+
+            return null;
+        }
+
         private void SaveSprite()
         {
             if (_parsedFile == null || _client == null)
